@@ -121,14 +121,6 @@ class BaseAPIClient:
             with urlopen(request, timeout=self.timeout) as response:
                 response_data = response.read().decode("utf-8")
 
-                # Try to parse JSON response
-                try:
-                    response_data = json.loads(response_data)
-                except json.JSONDecodeError:
-                    # Keep as string if not valid JSON
-                    pass
-
-                # Convert headers to dict
                 response_headers = dict(response.headers)
 
                 api_response = APIResponse(status_code=response.status, data=response_data, headers=response_headers)
