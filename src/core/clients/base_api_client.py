@@ -29,9 +29,9 @@ class APIResponse:
         """Check if the response indicates success (2xx status codes)."""
         return 200 <= self.status_code < 300
 
-    def json(self) -> Any:
+    def get_dict(self) -> Any:
         """Get response data as JSON (alias for data property)."""
-        return self.data
+        return json.loads(self.data)
 
 
 class BaseAPIClient:
@@ -130,21 +130,31 @@ class BaseAPIClient:
 
         except HTTPError as e:
             error_data = None
+            error_reason = None
             try:
-                error_data = json.loads(e.read().decode("utf-8"))
+                error_response = e.read().decode("utf-8")
+                error_data = json.loads(error_response)
+                # Extract reason from the API response if available
+                if isinstance(error_data, dict):
+                    error_reason = error_data.get("reason") or error_data.get("message") or error_data.get("detail")
             except (json.JSONDecodeError, AttributeError):
                 pass
 
-            self.logger.error(f"HTTP error {e.code}: {e.reason}")
-            raise APIException(message=f"HTTP {e.code}: {e.reason}", status_code=e.code, response_data=error_data)
+            # Build comprehensive error message
+            error_message = f"HTTP {e.code}: {e.reason} for URL: {url}"
+            if error_reason:
+                error_message += f" - API Error: {error_reason}"
+
+            self.logger.error(error_message)
+            raise APIException(message=error_message, status_code=e.code, response_data=error_data)
 
         except URLError as e:
-            self.logger.error(f"URL error: {e.reason}")
-            raise APIException(f"Connection error: {e.reason}")
+            self.logger.error(f"URL error: {e.reason} for URL: {url}")
+            raise APIException(f"Connection error: {e.reason} for URL: {url}")
 
         except Exception as e:
-            self.logger.error(f"Unexpected error: {str(e)}")
-            raise APIException(f"Unexpected error: {str(e)}")
+            self.logger.error(f"Unexpected error: {str(e)} for URL: {url}")
+            raise APIException(f"Unexpected error: {str(e)} for URL: {url}")
 
     def get(
         self, endpoint: str, params: Optional[Dict[str, str]] = None, headers: Optional[Dict[str, str]] = None

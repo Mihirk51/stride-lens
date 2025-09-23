@@ -1,19 +1,15 @@
 import os
 
-from src.core.clients.base_api_client import BaseAPIClient
+from src.services.open_meteo_weather import OpenMeteoWeatherAPIClient
 
 
 def main():
-    api_key = os.getenv("OW_API_KEY")
-    client = BaseAPIClient("https://api.open-meteo.com/v1")
-    params = {
-        "latitude": 41.85,
-        "longitude": -87.65,
-        "current": "temperature_2m,relative_humidity_2m,is_day,precipitation,rain,snowfall,showers,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
-    }
+    lat = float(os.getenv("LATITUDE", "37.7749"))  # Default to San Francisco
+    lon = float(os.getenv("LONGITUDE", "-122.4194"))
 
-    response = client.get("/forecast", params=params)
-    print(response.data)
+    weather_client = OpenMeteoWeatherAPIClient()
+    current_weather = weather_client.get_current_weather(lat=lat, lon=lon)
+    print(current_weather)
 
 
 if __name__ == "__main__":
