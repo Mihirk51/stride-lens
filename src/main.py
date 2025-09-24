@@ -1,15 +1,14 @@
-import geocoder
-
 from src.core import loggers
-from src.services.open_meteo_weather import OpenMeteoWeatherAPIClient
+from src.services import OpenMeteoWeatherAPIClient, lat_lon_service
 
 log = loggers.logger
 
 
 def main():
     try:
-        g = geocoder.ip("me")  # TODO: When going big, replace with platform specific library to get location
-        lat, lon = g.latlng
+        lat, lon = (
+            lat_lon_service.get_lat_lon()
+        )  # TODO: When going big, replace with platform specific library to get location
     except Exception:
         log.exception("Error obtaining geolocation")
 

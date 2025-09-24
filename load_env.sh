@@ -20,5 +20,3 @@ while IFS='=' read -r key value || [ -n "$key" ]; do
     export "$key=$value"
     echo "Exported: $key"
 done < "$ENV_FILE"
-
-echo "Environment variables exported successfully from $ENV_FILE!"
