@@ -6,6 +6,7 @@ __all__ = [
     "APIException",
 ]
 
+import json
 from typing import Any, Dict, Optional
 
 import requests
@@ -25,15 +26,29 @@ class APIResponse:
         """Check if the response indicates success (2xx status codes)."""
         return 200 <= self.status_code < 300
 
-    def get_dict(self) -> Any:
+    def get_json(self) -> Any:
         """Parse response data as JSON."""
+        if isinstance(self.data, str):
+            return json.loads(self.data)
         return self.data
+
+    def get_dict(self) -> Dict[str, Any]:
+        """Parse response data as a dictionary."""
+        if isinstance(self.data, str):
+            parsed = json.loads(self.data)
+            if not isinstance(parsed, dict):
+                raise ValueError("Response data is not a dictionary")
+            return parsed
+        elif isinstance(self.data, dict):
+            return self.data
+        else:
+            raise ValueError("Response data is not a dictionary")
 
 
 class BaseAPIClient:
     """Simple API client for HTTP requests."""
 
-    def __init__(self, base_url: str, timeout: int = 5):
+    def __init__(self, base_url: str, timeout: int = 30):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 
