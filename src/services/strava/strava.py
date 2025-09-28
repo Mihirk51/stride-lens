@@ -5,6 +5,7 @@ __all__ = [
 from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
 from src.interfaces.strava import StravaService
+from src.schemas.strava_activity_response import StravaActivity
 from src.services.strava.utils import refresh_strava_token
 
 
@@ -12,6 +13,7 @@ class Constants(constants.Constants):
     STRAVA_API_BASE_URL = "https://www.strava.com/api/v3"
     STRAVA_ATHLETE_ENDPOINT = "/athlete"
     STRAVA_ACTIVITIES_ENDPOINT = "/athlete/activities"
+    STRAVA_ACTIVITY_LIMIT = 10
     pass
 
 
@@ -29,7 +31,7 @@ class StravaAPIClient(StravaService):
         response = self.api_client.get(url, headers=self._headers())
         return response.get_json()
 
-    def get_recent_runs(self, limit: int = 10) -> list[dict]:
+    def get_recent_runs(self, limit: int = Constants.STRAVA_ACTIVITY_LIMIT) -> list[dict]:
         url = Constants.STRAVA_ACTIVITIES_ENDPOINT
         params = {"per_page": limit, "page": 1}
         response = self.api_client.get(url, headers=self._headers(), params=params)
@@ -52,7 +54,10 @@ def main():
     strava = StravaAPIClient()
 
     runs = strava.get_recent_runs(limit=5)
-    print(runs[0])
+
+    for run in runs:
+        activity = StravaActivity(**run)
+        print(activity.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":
