@@ -4,4 +4,5 @@ __all__ = [
 
 
 class WhoopSleepService:
-    pass
+    def __init__(self):
+        raise NotImplementedError()
