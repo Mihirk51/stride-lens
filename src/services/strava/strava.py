@@ -7,6 +7,10 @@ from src.core.clients.base_api_client import BaseAPIClient
 from src.interfaces.strava import StravaService
 from src.schemas.strava_activity_response import StravaActivity
 from src.services.strava.utils import refresh_strava_token
+from src.core.exceptions import APIException
+from src.core.loggers import logger
+
+log = logger
 
 
 class Constants(constants.Constants):
@@ -51,9 +55,18 @@ class StravaAPIClient(StravaService):
 
 
 def main():
-    strava = StravaAPIClient()
 
-    runs = strava.get_recent_runs(limit=5)
+    retry_count = 0
+
+    while retry_count < 3:
+        try:
+            strava = StravaAPIClient()
+
+            runs = strava.get_recent_runs(limit=5)
+            break
+        except APIException:
+            log.info(f"Error refreshing Strava token, retrying")
+            retry_count += 1
 
     for run in runs:
         activity = StravaActivity(**run)
