@@ -1,4 +1,4 @@
-"""Base API client for making HTTP requests with support for all REST methods."""
+"""Simple API client for making HTTP requests."""
 
 __all__ = [
     "BaseAPIClient",
@@ -8,156 +8,76 @@ __all__ = [
 
 import json
 from typing import Any, Dict, Optional
-from urllib.error import HTTPError, URLError
-from urllib.parse import urljoin
-from urllib.request import Request, urlopen
+
+import requests
 
 from src.core.exceptions import APIException
-from src.core.loggers import get_logger
 
 
 class APIResponse:
-    """Wrapper for API responses."""
+    """Simple wrapper for API responses."""
 
-    def __init__(self, status_code: int, data: Any, headers: Dict[str, str]):
+    def __init__(self, status_code: int, data: Any):
         self.status_code = status_code
         self.data = data
-        self.headers = headers
 
     @property
     def is_success(self) -> bool:
         """Check if the response indicates success (2xx status codes)."""
         return 200 <= self.status_code < 300
 
-    def get_dict(self) -> Any:
-        """Get response data as JSON (alias for data property)."""
-        return json.loads(self.data)
+    def get_json(self) -> Any:
+        """Parse response data as JSON."""
+        if isinstance(self.data, str):
+            return json.loads(self.data)
+        return self.data
+
+    def get_dict(self) -> Dict[str, Any]:
+        """Parse response data as a dictionary."""
+        if isinstance(self.data, str):
+            parsed = json.loads(self.data)
+            if not isinstance(parsed, dict):
+                raise ValueError("Response data is not a dictionary")
+            return parsed
+        elif isinstance(self.data, dict):
+            return self.data
+        else:
+            raise ValueError("Response data is not a dictionary")
 
 
 class BaseAPIClient:
-    """A simple, expandable API client with support for all REST methods."""
+    """Simple API client for HTTP requests."""
 
-    def __init__(self, base_url: str, timeout: int = 30, logger_name: Optional[str] = None):
-        """
-        Initialize the API client.
-
-        Args:
-            base_url: The base URL for the API
-            timeout: Request timeout in seconds
-            logger_name: Optional logger name for this client
-        """
+    def __init__(self, base_url: str, timeout: int = 30):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self.logger = get_logger(logger_name) if logger_name else get_logger()
-        self._default_headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
 
-    def _build_url(self, endpoint: str) -> str:
-        """Build the full URL from base URL and endpoint."""
-        return urljoin(f"{self.base_url}/", endpoint.lstrip("/"))
-
-    def _prepare_headers(self, headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
-        """Prepare headers by merging default headers with provided ones."""
-        final_headers = self._default_headers.copy()
-        if headers:
-            final_headers.update(headers)
-        return final_headers
-
-    def _prepare_data(self, data: Any) -> Optional[bytes]:
-        """Prepare request data for sending."""
-        if data is None:
-            return None
-
-        if isinstance(data, (dict, list)):
-            return json.dumps(data).encode("utf-8")
-        elif isinstance(data, str):
-            return data.encode("utf-8")
-        elif isinstance(data, bytes):
-            return data
-        else:
-            return json.dumps(data).encode("utf-8")
-
-    def _make_request(
-        self,
-        method: str,
-        endpoint: str,
-        data: Any = None,
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, str]] = None,
-    ) -> APIResponse:
-        """
-        Make an HTTP request.
-
-        Args:
-            method: HTTP method (GET, POST, PUT, PATCH, DELETE, etc.)
-            endpoint: API endpoint
-            data: Request body data
-            headers: Additional headers
-            params: URL query parameters
-
-        Returns:
-            APIResponse object with status code, data, and headers
-
-        Raises:
-            APIException: If the request fails
-        """
-        url = self._build_url(endpoint)
-
-        # Add query parameters
-        if params:
-            query_string = "&".join([f"{k}={v}" for k, v in params.items()])
-            url = f"{url}?{query_string}"
-
-        prepared_headers = self._prepare_headers(headers)
-        prepared_data = self._prepare_data(data)
-
-        self.logger.debug(f"Making {method} request to {url}")
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> APIResponse:
+        """Make an HTTP request."""
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
 
         try:
-            request = Request(url=url, data=prepared_data, headers=prepared_headers, method=method)
+            response = requests.request(method, url, timeout=self.timeout, **kwargs)
+            response.raise_for_status()
 
-            with urlopen(request, timeout=self.timeout) as response:
-                response_data = response.read().decode("utf-8")
-
-                response_headers = dict(response.headers)
-
-                api_response = APIResponse(status_code=response.status, data=response_data, headers=response_headers)
-
-                self.logger.debug(f"Request successful: {response.status}")
-                return api_response
-
-        except HTTPError as e:
-            error_data = None
-            error_reason = None
             try:
-                error_response = e.read().decode("utf-8")
-                error_data = json.loads(error_response)
-                # Extract reason from the API response if available
-                if isinstance(error_data, dict):
-                    error_reason = error_data.get("reason") or error_data.get("message") or error_data.get("detail")
-            except (json.JSONDecodeError, AttributeError):
-                pass
+                data = response.json()
+            except ValueError:
+                data = response.text
 
-            # Build comprehensive error message
-            error_message = f"HTTP {e.code}: {e.reason} for URL: {url}"
-            if error_reason:
-                error_message += f" - API Error: {error_reason}"
+            return APIResponse(response.status_code, data)
 
-            self.logger.error(error_message)
-            raise APIException(message=error_message, status_code=e.code, response_data=error_data)
-
-        except URLError as e:
-            self.logger.error(f"URL error: {e.reason} for URL: {url}")
-            raise APIException(f"Connection error: {e.reason} for URL: {url}")
-
-        except Exception as e:
-            self.logger.error(f"Unexpected error: {str(e)} for URL: {url}")
-            raise APIException(f"Unexpected error: {str(e)} for URL: {url}")
+        except requests.exceptions.Timeout:
+            raise APIException(f"Request timed out after {self.timeout} seconds")
+        except requests.exceptions.HTTPError as e:
+            raise APIException(f"HTTP {e.response.status_code}: {e.response.reason}")
+        except requests.exceptions.ConnectionError:
+            raise APIException(f"Connection error to {url}")
+        except requests.exceptions.RequestException as e:
+            raise APIException(f"Request failed: {str(e)}")
 
     def get(
-        self, endpoint: str, params: Optional[Dict[str, str]] = None, headers: Optional[Dict[str, str]] = None
+        self, endpoint: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None
     ) -> APIResponse:
         """Make a GET request."""
         return self._make_request("GET", endpoint, params=params, headers=headers)
@@ -167,57 +87,45 @@ class BaseAPIClient:
         endpoint: str,
         data: Any = None,
         headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> APIResponse:
         """Make a POST request."""
-        return self._make_request("POST", endpoint, data=data, headers=headers, params=params)
+        return self._make_request("POST", endpoint, json=data, headers=headers, params=params)
 
     def put(
         self,
         endpoint: str,
         data: Any = None,
         headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> APIResponse:
         """Make a PUT request."""
-        return self._make_request("PUT", endpoint, data=data, headers=headers, params=params)
+        return self._make_request("PUT", endpoint, json=data, headers=headers, params=params)
 
     def patch(
         self,
         endpoint: str,
         data: Any = None,
         headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> APIResponse:
         """Make a PATCH request."""
-        return self._make_request("PATCH", endpoint, data=data, headers=headers, params=params)
+        return self._make_request("PATCH", endpoint, json=data, headers=headers, params=params)
 
     def delete(
-        self, endpoint: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, str]] = None
+        self, endpoint: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, Any]] = None
     ) -> APIResponse:
         """Make a DELETE request."""
         return self._make_request("DELETE", endpoint, headers=headers, params=params)
 
     def head(
-        self, endpoint: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, str]] = None
+        self, endpoint: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, Any]] = None
     ) -> APIResponse:
         """Make a HEAD request."""
         return self._make_request("HEAD", endpoint, headers=headers, params=params)
 
     def options(
-        self, endpoint: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, str]] = None
+        self, endpoint: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, Any]] = None
     ) -> APIResponse:
         """Make an OPTIONS request."""
         return self._make_request("OPTIONS", endpoint, headers=headers, params=params)
-
-    def set_default_header(self, key: str, value: str) -> None:
-        """Set a default header that will be included in all requests."""
-        self._default_headers[key] = value
-
-    def remove_default_header(self, key: str) -> None:
-        """Remove a default header."""
-        self._default_headers.pop(key, None)
-
-    def set_timeout(self, timeout: int) -> None:
-        """Set the request timeout."""
-        self.timeout = timeout

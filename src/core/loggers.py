@@ -5,6 +5,7 @@ __all__ = [
 ]
 
 import logging
+import os
 import sys
 from typing import Dict
 
@@ -96,6 +97,7 @@ class LoggerService:
 
 
 logger = LoggerService()
+logger.set_level(os.getenv("LOG_LEVEL", "INFO"))
 
 
 def get_logger(name: str = Constants.GLOBAL_LOGGER_NAME) -> LoggerService:

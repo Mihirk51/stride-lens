@@ -1,1 +1,3 @@
-from .open_meteo_weather import *  # noqa
+from .weather import *  # noqa
+from .lat_lon import *  # noqa
+from .strava import *  # noqa

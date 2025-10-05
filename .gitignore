@@ -211,3 +211,5 @@ __marimo__/
 logs/
 
 output.json
+scratch*.py
+directory_tree.sh
