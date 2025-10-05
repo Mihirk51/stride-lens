@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 
-from src.api.v1.schemas.record_manual_sleep_response import RecordManualSleepResponse
+from src.api.v1.schemas.manual_sleep_response_schemas import RecordManualSleepResponse
 from src.schemas.manual_sleep_and_recovery import ManualSleepObjectiveInput, ManualSleepSubjectiveInput
 from src.services.sleep_and_recovery.manual_sleep_service import ManualSleepService
 
