@@ -22,8 +22,8 @@ def get_recent_runs():
 @router.get(
     "/recent-activites",
     response_model=StravaActivityResponse,
-    summary="Get Recent Runs from Strava",
-    operation_id="get_recent_runs",
+    summary="Get Recent Activities from Strava",
+    operation_id="get_recent_activities",
 )
 def get_recent_activities():
     result = strava_api_client.get_activities(ActivityType.RECENT_ACTIVITIES)
