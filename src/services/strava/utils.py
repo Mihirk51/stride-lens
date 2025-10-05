@@ -22,7 +22,7 @@ api_client = BaseAPIClient(base_url=Constants.STRAVA_BASE_URL)
 
 def refresh_strava_token():
     """Refresh the Strava access token using the refresh token and update the .env file."""
-    load_dotenv(ENV_FILE)
+    load_dotenv(ENV_FILE, override=True)
 
     client_id = os.getenv("STRAVA_CLIENT_ID")
     client_secret = os.getenv("STRAVA_CLIENT_SECRET")

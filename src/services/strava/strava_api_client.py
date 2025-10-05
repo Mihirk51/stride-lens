@@ -61,7 +61,7 @@ class StravaAPIClient(StravaService):
 
         from dotenv import load_dotenv
 
-        load_dotenv(Constants.ENV_FILE)
+        load_dotenv(Constants.ENV_FILE, override=True)
         access_token = os.getenv("STRAVA_ACCESS_TOKEN")
         if not access_token:
             raise ValueError("STRAVA_ACCESS_TOKEN not found in .env file")
