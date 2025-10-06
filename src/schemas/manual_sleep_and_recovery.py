@@ -1,10 +1,6 @@
-__all__ = [
-    "ManualSleepSubjectiveInput",
-    "ManualSleepObjectiveInput",
-    "ManualSleepInput",
-]
+__all__ = ["ManualSleepSubjectiveInput", "ManualSleepObjectiveInput", "ManualSleepInput", "ManualSleepServiceResponse"]
 
-from typing import Optional, Union
+from typing import Any, Dict, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -28,6 +24,43 @@ class ManualSleepObjectiveInput(BaseModel):
             if not any(values.values()):
                 raise ValueError("At least one objective sleep metric must be provided.")
             return values
+
+
+class ManualSleepServiceResponse(BaseModel):
+    """Response model for ManualSleepService.record_sleep method."""
+
+    score: Optional[float] = Field(None, description="Calculated sleep score (0-100) or subjective rating")
+    method: Literal["subjective_rating", "manual_metrics", "invalid"] = Field(
+        ..., description="Method used for calculation"
+    )
+    warning: Optional[str] = Field(None, description="Warning message about data quality or limitations")
+    details: Optional[Dict[str, Any]] = Field(
+        None, description="Additional sleep metrics details (only for objective data)"
+    )
+
+    class Config:
+        schema_extra = {
+            "examples": [
+                {
+                    "score": 75.0,
+                    "method": "subjective_rating",
+                    "warning": "Score is based only on subjective rating. Accuracy may be limited.",
+                    "details": None,
+                },
+                {
+                    "score": 82.5,
+                    "method": "manual_metrics",
+                    "warning": None,
+                    "details": {"time_in_bed_minutes": 480, "deep_sleep_minutes": 90, "rem_sleep_minutes": 120},
+                },
+                {
+                    "score": None,
+                    "method": "invalid",
+                    "warning": "No valid sleep input provided. Scores may not be accurate.",
+                    "details": None,
+                },
+            ]
+        }
 
 
 ManualSleepInput = Union[ManualSleepSubjectiveInput, ManualSleepObjectiveInput]

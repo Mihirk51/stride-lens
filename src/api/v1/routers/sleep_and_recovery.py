@@ -26,9 +26,9 @@ def record_subjective_sleep(subjective_rating: int) -> ManualSleepResponse:
     return ManualSleepResponse(
         success=True,
         message="Subjective sleep data recorded successfully",
-        score=result["score"],
-        method=result["method"],
-        warning=result.get("warning"),
+        score=result.score,
+        method=result.method,
+        warning=result.warning,
         sleep_id=f"sleep_{uuid.uuid4().hex[:8]}",
     )
 
@@ -63,9 +63,9 @@ def record_objective_sleep(
     return ManualSleepResponse(
         success=True,
         message="Objective sleep data recorded successfully",
-        score=result["score"],
-        method=result["method"],
-        details=result.get("details"),
-        warning=result.get("warning"),
+        score=result.score,
+        method=result.method,
+        details=result.details,
+        warning=result.warning,
         sleep_id=f"sleep_{uuid.uuid4().hex[:8]}",
     )
