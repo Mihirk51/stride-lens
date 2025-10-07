@@ -63,6 +63,10 @@ class StravaActivityResponse(BaseModel):
         if v is None:
             return v
 
+        # Handle StravaServiceResponse object
+        if hasattr(v, "activities"):
+            v = v.activities
+
         converted = []
         for item in v:
             if isinstance(item, StravaActivity):

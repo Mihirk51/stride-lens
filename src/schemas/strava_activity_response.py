@@ -1,4 +1,7 @@
-__all__ = ["StravaActivity"]
+__all__ = [
+    "StravaActivity",
+    "StravaServiceResponse",
+]
 
 from datetime import datetime
 from typing import List, Optional
@@ -30,3 +33,7 @@ class StravaActivity(BaseModel):
 
     start_latlng: Optional[List[float]] = None
     end_latlng: Optional[List[float]] = None
+
+
+class StravaServiceResponse(BaseModel):
+    activities: List[StravaActivity]

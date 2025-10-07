@@ -16,7 +16,9 @@ strava_api_client = StravaAPIClient()
 )
 def get_recent_runs():
     result = strava_api_client.get_activities(ActivityType.RECENT_RUNS)
-    return StravaActivityResponse(success=True, message="Recent runs retrieved successfully", activities=result)
+    return StravaActivityResponse(
+        success=True, message="Recent runs retrieved successfully", activities=result.activities
+    )
 
 
 @router.get(
@@ -27,4 +29,6 @@ def get_recent_runs():
 )
 def get_recent_activities():
     result = strava_api_client.get_activities(ActivityType.RECENT_ACTIVITIES)
-    return StravaActivityResponse(success=True, message="Recent activities retrieved successfully", activities=result)
+    return StravaActivityResponse(
+        success=True, message="Recent activities retrieved successfully", activities=result.activities
+    )

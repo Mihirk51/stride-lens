@@ -11,7 +11,7 @@ from src.core.clients.base_api_client import BaseAPIClient
 from src.core.exceptions import APIException
 from src.core.loggers import logger
 from src.interfaces.strava import StravaService
-from src.schemas.strava_activity_response import StravaActivity
+from src.schemas.strava_activity_response import StravaActivity, StravaServiceResponse
 from src.services.strava.utils import refresh_strava_token
 
 log = logger
@@ -109,7 +109,7 @@ class StravaAPIClient(StravaService):
 
         raise APIException(f"Failed to retrieve data after {max_retries} attempts") from last_exception
 
-    def get_activities(self, activity_type: ActivityType, limit: int = None) -> List[StravaActivity]:
+    def get_activities(self, activity_type: ActivityType, limit: int = None) -> StravaServiceResponse:
         """
         Get activities as parsed Pydantic models.
 
@@ -133,7 +133,7 @@ class StravaAPIClient(StravaService):
                 log.warning(f"Failed to parse activity: {str(e)}")
                 continue
 
-        return activities
+        return StravaServiceResponse(activities=activities)
 
 
 def main():
