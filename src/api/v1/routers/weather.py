@@ -7,7 +7,10 @@ from src.services.weather import OpenMeteoWeatherAPIClient
 router = APIRouter(tags=["weather"])
 
 weather_api_client = OpenMeteoWeatherAPIClient()
-lat, lon = lat_lon_service.get_lat_lon()
+
+lat_lon = lat_lon_service.get_lat_lon()
+lat = lat_lon.latitude
+lon = lat_lon.longitude
 
 
 @router.get(
