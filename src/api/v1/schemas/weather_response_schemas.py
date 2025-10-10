@@ -1,13 +1,14 @@
 __all__ = [
-    "WeatherResponse",
     "CurrentWeatherSummary",
+    "CurrentWeatherResponse",
+    "ForecastWeatherResponse",
 ]
 
 from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
-from src.schemas.weather_api_response import WeatherAPIResponse
+from src.schemas.weather_api_response import CurrentWeatherAPIResponse
 
 
 class CurrentWeatherSummary(BaseModel):
@@ -28,8 +29,8 @@ class CurrentWeatherSummary(BaseModel):
     showers: Optional[float] = Field(None, description="Showers in mm")
 
     @classmethod
-    def from_weather_api_response(cls, weather: WeatherAPIResponse) -> "CurrentWeatherSummary":
-        """Create CurrentWeatherSummary from full WeatherAPIResponse model."""
+    def from_weather_api_response(cls, weather: CurrentWeatherAPIResponse) -> "CurrentWeatherSummary":
+        """Create CurrentWeatherSummary from full CurrentWeatherAPIResponse model."""
         return cls(
             timezone=weather.timezone,
             temperature_2m=weather.current.temperature_2m,
@@ -58,7 +59,7 @@ class CurrentWeatherSummary(BaseModel):
         }
 
 
-class WeatherResponse(BaseModel):
+class CurrentWeatherResponse(BaseModel):
     success: bool = Field(True, description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
     weather_data: Optional[CurrentWeatherSummary] = Field(None, description="Current weather data")
@@ -68,11 +69,11 @@ class WeatherResponse(BaseModel):
         if v is None:
             return v
 
-        if isinstance(v, WeatherAPIResponse):
+        if isinstance(v, CurrentWeatherAPIResponse):
             return CurrentWeatherSummary.from_weather_api_response(v)
         elif isinstance(v, dict):
             try:
-                weather_response = WeatherAPIResponse(**v)
+                weather_response = CurrentWeatherAPIResponse(**v)
                 return CurrentWeatherSummary.from_weather_api_response(weather_response)
             except Exception:
                 return v
@@ -96,3 +97,7 @@ class WeatherResponse(BaseModel):
                 },
             }
         }
+
+
+class ForecastWeatherResponse(BaseModel):
+    pass

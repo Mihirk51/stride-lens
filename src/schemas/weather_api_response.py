@@ -1,5 +1,6 @@
 __all__ = [
-    "WeatherAPIResponse",
+    "ForecastWeatherAPIResponse",
+    "CurrentWeatherAPIResponse",
 ]
 
 from pydantic import BaseModel
@@ -31,7 +32,7 @@ class Current(BaseModel):
     wind_speed_10m: float
 
 
-class WeatherAPIResponse(BaseModel):
+class CurrentWeatherAPIResponse(BaseModel):
     latitude: float
     longitude: float
     generationtime_ms: float
@@ -41,3 +42,45 @@ class WeatherAPIResponse(BaseModel):
     elevation: float
     current_units: CurrentUnits
     current: Current
+
+    class Config:
+        extra = "ignore"
+
+
+class HourlyUnits(BaseModel):
+    time: str
+    temperature_2m: str
+    precipitation: str
+    precipitation_probability: str
+    wind_speed_10m: str
+    wind_direction_10m: str
+    relative_humidity_2m: str
+    wind_gusts_10m: str
+    is_day: str
+
+
+class Hourly(BaseModel):
+    time: list[str]
+    temperature_2m: list[float]
+    precipitation: list[float]
+    precipitation_probability: list[int]
+    wind_speed_10m: list[float]
+    wind_direction_10m: list[int]
+    relative_humidity_2m: list[int]
+    wind_gusts_10m: list[float]
+    is_day: list[int]
+
+
+class ForecastWeatherAPIResponse(BaseModel):
+    latitude: float
+    longitude: float
+    generationtime_ms: float
+    utc_offset_seconds: int
+    timezone: str
+    timezone_abbreviation: str
+    elevation: float
+    hourly_units: HourlyUnits
+    hourly: Hourly
+
+    class Config:
+        extra = "ignore"

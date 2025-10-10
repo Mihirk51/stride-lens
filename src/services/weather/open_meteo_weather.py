@@ -4,9 +4,9 @@ __all__ = [
 
 from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
-from src.core.config import OpenMeteoCurrentWeatherConfig
+from src.core.config import OpenMeteoCurrentWeatherConfig, OpenMeteoForecastConfig
 from src.interfaces.weather import WeatherService
-from src.schemas.weather_api_response import WeatherAPIResponse
+from src.schemas.weather_api_response import CurrentWeatherAPIResponse, ForecastWeatherAPIResponse
 
 
 class Constants(constants.Constants):
@@ -18,7 +18,7 @@ class OpenMeteoWeatherAPIClient(WeatherService):
     def __init__(self, base_url: str = Constants.OPEN_METEO_BASE_URL):
         self.client = BaseAPIClient(base_url=base_url)
 
-    def get_current_weather(self, lat: float, lon: float) -> WeatherAPIResponse:
+    def get_current_weather(self, lat: float, lon: float) -> CurrentWeatherAPIResponse:
         weather_config = OpenMeteoCurrentWeatherConfig(latitude=lat, longitude=lon)
 
         current_weather_params = weather_config.current_weather_params
@@ -27,7 +27,15 @@ class OpenMeteoWeatherAPIClient(WeatherService):
         params = weather_config.model_dump()
         reponse_data = (self.client.get(endpoint=Constants.WEATHER_ENDPOINT, params=params)).get_dict()
 
-        return WeatherAPIResponse(**reponse_data)
+        return CurrentWeatherAPIResponse(**reponse_data)
 
-    def get_weather_forecast(self, lat: float, lon: float, days: int) -> WeatherAPIResponse:
-        pass
+    def get_weather_forecast(self, lat: float, lon: float, days: int) -> ForecastWeatherAPIResponse:
+        weather_config = OpenMeteoForecastConfig(latitude=lat, longitude=lon)
+
+        forecast_weather_params = weather_config.forecast_weather_params
+        weather_config.hourly = forecast_weather_params
+
+        params = weather_config.model_dump()
+        reponse_data = (self.client.get(endpoint=Constants.WEATHER_ENDPOINT, params=params)).get_dict()
+
+        return ForecastWeatherAPIResponse(**reponse_data)
