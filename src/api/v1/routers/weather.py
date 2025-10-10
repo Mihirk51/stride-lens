@@ -26,10 +26,10 @@ def get_current_weather():
 
 @router.get(
     "/weather-forecast",
-    response_model=CurrentWeatherResponse,
+    response_model=ForecastWeatherResponse,
     summary="Get weather forecast from weather client",
     operation_id="get_weather_forecast",
 )
-def get_weather_forecast():
-    result = weather_api_client.get_weather_forecast(lat, lon)
+def get_weather_forecast(forecast_days: int = 3):
+    result = weather_api_client.get_weather_forecast(lat, lon, forecast_days)
     return ForecastWeatherResponse(success=True, message="Weather forecast retrieved successfully", weather_data=result)

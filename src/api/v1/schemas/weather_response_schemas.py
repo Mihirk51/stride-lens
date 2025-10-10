@@ -8,7 +8,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
-from src.schemas.weather_api_response import CurrentWeatherAPIResponse
+from src.schemas.weather_api_response import CurrentWeatherAPIResponse, ForecastWeatherAPIResponse
 
 
 class CurrentWeatherSummary(BaseModel):
@@ -100,4 +100,6 @@ class CurrentWeatherResponse(BaseModel):
 
 
 class ForecastWeatherResponse(BaseModel):
-    pass
+    success: bool = Field(True, description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
+    weather_data: Optional[ForecastWeatherAPIResponse] = Field(None, description="Forecast weather data")
