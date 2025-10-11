@@ -3,6 +3,8 @@ __all__ = [
     "CurrentWeatherAPIResponse",
 ]
 
+from typing import Dict, Optional, Union
+
 from pydantic import BaseModel
 
 
@@ -17,6 +19,8 @@ class CurrentUnits(BaseModel):
     snowfall: str
     showers: str
     wind_speed_10m: str
+    wind_direction_10m: str
+    wind_gusts_10m: str
 
 
 class Current(BaseModel):
@@ -30,6 +34,8 @@ class Current(BaseModel):
     snowfall: float
     showers: float
     wind_speed_10m: float
+    wind_direction_10m: int
+    wind_gusts_10m: float
 
 
 class CurrentWeatherAPIResponse(BaseModel):
@@ -66,9 +72,22 @@ class Hourly(BaseModel):
     precipitation_probability: list[int]
     wind_speed_10m: list[float]
     wind_direction_10m: list[int]
-    relative_humidity_2m: list[int]
     wind_gusts_10m: list[float]
+    relative_humidity_2m: list[int]
     is_day: list[int]
+
+
+class HourlyWeatherData(BaseModel):
+    """Individual hourly weather data point."""
+
+    temperature_2m: float
+    precipitation: float
+    precipitation_probability: int
+    wind_speed_10m: float
+    wind_direction_10m: int
+    wind_gusts_10m: float
+    relative_humidity_2m: int
+    is_day: int
 
 
 class ForecastWeatherAPIResponse(BaseModel):
@@ -79,8 +98,8 @@ class ForecastWeatherAPIResponse(BaseModel):
     timezone: str
     timezone_abbreviation: str
     elevation: float
-    hourly_units: HourlyUnits
-    hourly: Hourly
+    hourly_units: Optional[HourlyUnits] = None  # Optional since it gets removed
+    hourly: Union[Hourly, Dict[str, HourlyWeatherData]]  # Support both formats
 
     class Config:
         extra = "ignore"

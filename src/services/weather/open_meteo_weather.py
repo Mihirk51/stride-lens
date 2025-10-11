@@ -39,7 +39,6 @@ class OpenMeteoWeatherAPIClient(WeatherService):
         params = weather_config.model_dump()
         reponse_data = (self.client.get(endpoint=Constants.WEATHER_ENDPOINT, params=params)).get_dict()
 
-        # Transform the hourly data structure
         transformed_data = self._transform_hourly_data(reponse_data)
 
         return ForecastWeatherAPIResponse(**transformed_data)
@@ -51,31 +50,21 @@ class OpenMeteoWeatherAPIClient(WeatherService):
         if "hourly" not in response_data.keys():
             return response_data
 
-        hourly_data = response_data["weather_data"]["hourly"]
+        hourly_data = response_data["hourly"]
 
-        # Extract time array and other parameter arrays
         time_array = hourly_data.get("time", [])
-
-        # Create the transformed hourly structure
         transformed_hourly = {}
 
         for i, timestamp in enumerate(time_array):
             transformed_hourly[timestamp] = {}
 
-            # Iterate through all hourly parameters except 'time'
             for param_name, param_values in hourly_data.items():
                 if param_name != "time" and isinstance(param_values, list):
                     if i < len(param_values):
                         transformed_hourly[timestamp][param_name] = param_values[i]
 
-        # Create new response structure
         transformed_response = response_data.copy()
-        transformed_response["weather_data"] = response_data["weather_data"].copy()
-        transformed_response["weather_data"]["hourly"] = transformed_hourly
-
-        # Remove hourly_units as it's no longer needed in this format
-        if "hourly_units" in transformed_response["weather_data"]:
-            del transformed_response["weather_data"]["hourly_units"]
+        transformed_response["hourly"] = transformed_hourly
 
         return transformed_response
 
@@ -86,4 +75,4 @@ if __name__ == "__main__":
     lat_lon = lat_lon_service.get_lat_lon()
     lat = lat_lon.latitude
     lon = lat_lon.longitude
-    result = weather_api_client.get_weather_forecast(lat, lon, 2)
+    result = weather_api_client.get_current_weather(lat, lon)
