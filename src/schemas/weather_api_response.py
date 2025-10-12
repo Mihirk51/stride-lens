@@ -10,7 +10,6 @@ from pydantic import BaseModel
 
 class CurrentUnits(BaseModel):
     time: str
-    interval: str
     temperature_2m: str
     relative_humidity_2m: str
     is_day: str
@@ -25,7 +24,6 @@ class CurrentUnits(BaseModel):
 
 class Current(BaseModel):
     time: str
-    interval: int
     temperature_2m: float
     relative_humidity_2m: int
     is_day: int
@@ -60,8 +58,8 @@ class HourlyUnits(BaseModel):
     precipitation_probability: str
     wind_speed_10m: str
     wind_direction_10m: str
-    relative_humidity_2m: str
     wind_gusts_10m: str
+    relative_humidity_2m: str
     is_day: str
 
 

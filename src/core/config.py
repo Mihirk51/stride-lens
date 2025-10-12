@@ -1,6 +1,5 @@
 __all__ = ["OpenMeteoCurrentWeatherConfig", "OpenMeteoForecastConfig"]
 
-from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -34,7 +33,7 @@ class OpenMeteoCurrentWeatherConfig(BaseModel):
 class OpenMeteoForecastConfig(BaseModel):
     latitude: float
     longitude: float
-    timezone: Literal["America%2FChicago", "auto"] = Field(default="auto")
+    timezone: str = Field(default="auto")
     wind_speed_unit: str = Field(default="mph")
     forecast_days: int = Field(default=3, description="Number of days to forecast")
     hourly: list | str = Field(

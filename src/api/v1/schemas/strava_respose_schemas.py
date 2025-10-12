@@ -34,7 +34,7 @@ class StravaActivitySummary(BaseModel):
         return cls(**activity.dict())
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 123456789,
                 "name": "Morning Run",

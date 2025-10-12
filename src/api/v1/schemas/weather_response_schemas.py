@@ -49,7 +49,7 @@ class CurrentWeatherSummary(BaseModel):
         )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "timezone": "America/Chicago",
             "current_units": {
                 "time": "iso8601",
@@ -100,7 +100,7 @@ class CurrentWeatherResponse(BaseModel):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "success": True,
             "message": "Current weather retrieved successfully",
             "weather_data": {
@@ -171,7 +171,7 @@ class ForecastWeatherSummary(BaseModel):
         )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "latitude": 41.85271,
                 "longitude": -87.65361,
@@ -228,7 +228,7 @@ class ForecastWeatherResponse(BaseModel):
         return v
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Weather forecast retrieved successfully",

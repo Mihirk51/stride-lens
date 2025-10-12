@@ -17,7 +17,7 @@ class ManualSleepResponse(BaseModel):
     sleep_id: Optional[str] = Field(None, description="Unique identifier for the sleep record")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Sleep data recorded successfully",
