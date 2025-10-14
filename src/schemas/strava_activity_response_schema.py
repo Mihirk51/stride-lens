@@ -1,6 +1,7 @@
 __all__ = [
     "StravaActivity",
     "StravaServiceResponse",
+    "StravaAthleteProfile",
 ]
 
 from datetime import datetime
@@ -35,5 +36,26 @@ class StravaActivity(BaseModel):
     end_latlng: Optional[List[float]] = None
 
 
+class StravaAthleteProfile(BaseModel):
+    """Athlete profile information from Strava."""
+
+    id: int
+    username: Optional[str] = None
+    firstname: str
+    lastname: str
+    bio: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    sex: Optional[str] = None
+    premium: bool = False
+    weight: Optional[float] = None
+    profile_medium: Optional[str] = None
+    profile: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
 class StravaServiceResponse(BaseModel):
     activities: List[StravaActivity]
+    athlete_profile: Optional[StravaAthleteProfile] = None

@@ -114,10 +114,12 @@ class StravaAPIClient(StravaService):
         Returns:
             List of StravaActivity models
         """
-        raw_data = self._get_data_by_type(activity_type, limit)
+        athlete_profile = self._get_athlete_profile()
 
         if activity_type == ActivityType.ATHLETE_PROFILE:
-            return []
+            return StravaServiceResponse(activities=[], athlete_profile=athlete_profile)
+
+        raw_data = self._get_data_by_type(activity_type, limit)
 
         if not isinstance(raw_data, list):
             raise ValueError(f"Expected list for {activity_type}, got {type(raw_data)}")
@@ -131,7 +133,7 @@ class StravaAPIClient(StravaService):
                 log.warning(f"Failed to parse activity: {str(e)}")
                 continue
 
-        return StravaServiceResponse(activities=activities)
+        return StravaServiceResponse(activities=activities, athlete_profile=athlete_profile)
 
     def _update_token(self):
         if self.token_expiry < datetime.now().isoformat():

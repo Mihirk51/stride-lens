@@ -1,5 +1,6 @@
 __all__ = [
     "StravaActivityResponse",
+    "StravaAthleteProfileSummary",
 ]
 
 from datetime import datetime
@@ -7,7 +8,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from src.schemas.strava_activity_response_schema import StravaActivity
+from src.schemas.strava_activity_response_schema import StravaActivity, StravaAthleteProfile
 
 
 class StravaActivitySummary(BaseModel):
@@ -52,11 +53,62 @@ class StravaActivitySummary(BaseModel):
         }
 
 
+class StravaAthleteProfileSummary(BaseModel):
+    """Summary of athlete profile for API responses."""
+
+    id: int
+    username: Optional[str] = None
+    firstname: str
+    lastname: str
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    sex: Optional[str] = None
+    premium: bool = False
+    weight: Optional[float] = None
+    profile_medium: Optional[str] = None
+
+    @classmethod
+    def from_athlete_profile(cls, profile: StravaAthleteProfile) -> "StravaAthleteProfileSummary":
+        """Create summary from full athlete profile."""
+        return cls(**profile.dict())
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 39347966,
+                "username": "mihir_kadam",
+                "firstname": "Mihir",
+                "lastname": "Kadam",
+                "city": "Chicago",
+                "state": "Illinois",
+                "country": "United States",
+                "sex": "M",
+                "premium": False,
+                "weight": 69.0,
+                "profile_medium": "https://graph.facebook.com/2408439245872989/picture?height=256&width=256",
+            }
+        }
+
+
 class StravaActivityResponse(BaseModel):
     success: bool = Field(True, description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
+    athlete_profile: Optional[StravaAthleteProfileSummary] = Field(None, description="Athlete profile information")
     activity: Optional[StravaActivitySummary] = Field(None, description="Single Strava activity data")
     activities: Optional[List[StravaActivitySummary]] = Field(None, description="List of Strava activities")
+
+    @validator("athlete_profile", pre=True)
+    def convert_athlete_profile(cls, v):
+        if v is None:
+            return v
+
+        if isinstance(v, StravaAthleteProfile):
+            return StravaAthleteProfileSummary.from_athlete_profile(v)
+        elif isinstance(v, dict):
+            profile = StravaAthleteProfile(**v)
+            return StravaAthleteProfileSummary.from_athlete_profile(profile)
+        return v
 
     @validator("activities", pre=True)
     def convert_activities(cls, v):
@@ -95,6 +147,18 @@ class StravaActivityResponse(BaseModel):
             "example": {
                 "success": True,
                 "message": "Strava activities retrieved successfully",
+                "athlete_profile": {
+                    "id": 39347966,
+                    "username": "mihir_kadam",
+                    "firstname": "Mihir",
+                    "lastname": "Kadam",
+                    "city": "Chicago",
+                    "state": "Illinois",
+                    "country": "United States",
+                    "sex": "M",
+                    "premium": False,
+                    "weight": 69.0,
+                },
                 "activity": None,
                 "activities": [
                     {
