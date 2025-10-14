@@ -1,11 +1,24 @@
 __all__ = [
     "ForecastWeatherAPIResponse",
     "CurrentWeatherAPIResponse",
+    "WeatherForecastRequestParams",
+    "CurrentWeatherRequestParams",
 ]
 
 from typing import Dict, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class CurrentWeatherRequestParams(BaseModel):
+    latitude: float = Field(..., ge=-90, le=90, description="Latitude of the location (-90 to 90)")
+    longitude: float = Field(..., ge=-180, le=180, description="Longitude of the location (-180 to 180)")
+
+
+class WeatherForecastRequestParams(BaseModel):
+    latitude: float = Field(..., ge=-90, le=90, description="Latitude of the location (-90 to 90)")
+    longitude: float = Field(..., ge=-180, le=180, description="Longitude of the location (-180 to 180)")
+    forecast_days: int = Field(..., ge=1, le=7, description="Number of days to forecast (1-7)")
 
 
 class CurrentUnits(BaseModel):

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from src.api.v1.schemas.weather_response_schemas import CurrentWeatherResponse, ForecastWeatherResponse
+from src.schemas.weather_api_response_schema import CurrentWeatherRequestParams, WeatherForecastRequestParams
 from src.services.lat_lon import lat_lon_service
 from src.services.weather import OpenMeteoWeatherAPIClient
 
@@ -20,7 +21,10 @@ lon = lat_lon.longitude
     operation_id="get_current_weather",
 )
 def get_current_weather():
-    result = weather_api_client.get_current_weather(lat, lon)
+    request_params = CurrentWeatherRequestParams(latitude=lat, longitude=lon)
+
+    result = weather_api_client.get_current_weather(request_params)
+
     return CurrentWeatherResponse(success=True, message="Current weather retrieved successfully", weather_data=result)
 
 
@@ -31,5 +35,8 @@ def get_current_weather():
     operation_id="get_weather_forecast",
 )
 def get_weather_forecast(forecast_days: int = 3):
-    result = weather_api_client.get_weather_forecast(lat, lon, forecast_days)
+    request_params = WeatherForecastRequestParams(latitude=lat, longitude=lon, forecast_days=forecast_days)
+
+    result = weather_api_client.get_weather_forecast(request_params)
+
     return ForecastWeatherResponse(success=True, message="Weather forecast retrieved successfully", weather_data=result)

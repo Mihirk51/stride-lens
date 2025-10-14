@@ -6,7 +6,12 @@ from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
 from src.core.config import OpenMeteoCurrentWeatherConfig, OpenMeteoForecastConfig
 from src.interfaces.weather import WeatherService
-from src.schemas.weather_api_response_schema import CurrentWeatherAPIResponse, ForecastWeatherAPIResponse
+from src.schemas.weather_api_response_schema import (
+    CurrentWeatherAPIResponse,
+    CurrentWeatherRequestParams,
+    ForecastWeatherAPIResponse,
+    WeatherForecastRequestParams,
+)
 from src.services.lat_lon import lat_lon_service
 
 
@@ -19,7 +24,10 @@ class OpenMeteoWeatherAPIClient(WeatherService):
     def __init__(self, base_url: str = Constants.OPEN_METEO_BASE_URL):
         self.client = BaseAPIClient(base_url=base_url)
 
-    def get_current_weather(self, lat: float, lon: float) -> CurrentWeatherAPIResponse:
+    def get_current_weather(self, current_weather_params: CurrentWeatherRequestParams) -> CurrentWeatherAPIResponse:
+        lat = current_weather_params.latitude
+        lon = current_weather_params.longitude
+
         weather_config = OpenMeteoCurrentWeatherConfig(latitude=lat, longitude=lon)
 
         current_weather_params = weather_config.current_weather_params
@@ -30,7 +38,11 @@ class OpenMeteoWeatherAPIClient(WeatherService):
 
         return CurrentWeatherAPIResponse(**reponse_data)
 
-    def get_weather_forecast(self, lat: float, lon: float, days: int) -> ForecastWeatherAPIResponse:
+    def get_weather_forecast(self, forecast_params: WeatherForecastRequestParams) -> ForecastWeatherAPIResponse:
+        lat = forecast_params.latitude
+        lon = forecast_params.longitude
+        days = forecast_params.forecast_days
+
         weather_config = OpenMeteoForecastConfig(latitude=lat, longitude=lon, forecast_days=days)
 
         forecast_weather_params = weather_config.forecast_weather_params

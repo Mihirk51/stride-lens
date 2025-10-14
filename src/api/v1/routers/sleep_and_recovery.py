@@ -12,7 +12,7 @@ router = APIRouter(tags=["sleep_and_recovery"])
 sleep_service = ManualSleepService()
 
 
-@router.post(
+@router.get(
     "/manual/subjective",
     response_model=ManualSleepResponse,
     summary="Record Subjective Sleep",
@@ -33,7 +33,7 @@ def record_subjective_sleep(subjective_rating: int) -> ManualSleepResponse:
     )
 
 
-@router.post(
+@router.get(
     "/manual/objective",
     response_model=ManualSleepResponse,
     summary="Record Objective Sleep",
