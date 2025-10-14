@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.schemas.manual_sleep_and_recovery import ManualSleepInput
+from src.schemas.manual_sleep_and_recovery_schema import ManualSleepInput
 
 
 class SleepService(ABC):

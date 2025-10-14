@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from src.schemas.strava_activity_response import StravaActivity
+from src.schemas.strava_activity_response_schema import StravaActivity
 
 
 class StravaActivitySummary(BaseModel):

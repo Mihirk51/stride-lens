@@ -2,7 +2,7 @@ __all__ = [
     "ManualSleepService",
 ]
 
-from src.schemas.manual_sleep_and_recovery import (
+from src.schemas.manual_sleep_and_recovery_schema import (
     ManualSleepInput,
     ManualSleepObjectiveInput,
     ManualSleepServiceResponse,

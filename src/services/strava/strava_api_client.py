@@ -12,7 +12,7 @@ from src.core.clients.base_api_client import BaseAPIClient
 from src.core.exceptions import APIException
 from src.core.loggers import logger
 from src.interfaces.strava import StravaService
-from src.schemas.strava_activity_response import StravaActivity, StravaServiceResponse
+from src.schemas.strava_activity_response_schema import StravaActivity, StravaServiceResponse
 from src.services.strava.utils import refresh_strava_token
 
 log = logger

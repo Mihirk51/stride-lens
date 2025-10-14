@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.schemas.weather_api_response import CurrentWeatherAPIResponse
+from src.schemas.weather_api_response_schema import CurrentWeatherAPIResponse
 
 
 class WeatherService(ABC):

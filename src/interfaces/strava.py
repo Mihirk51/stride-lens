@@ -4,7 +4,7 @@ __all__ = [
 from abc import ABC, abstractmethod
 from typing import Any, List
 
-from src.schemas.strava_activity_response import StravaActivity
+from src.schemas.strava_activity_response_schema import StravaActivity
 
 
 class StravaService(ABC):

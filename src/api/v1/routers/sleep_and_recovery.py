@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter
 
 from src.api.v1.schemas.manual_sleep_response_schemas import ManualSleepResponse
-from src.schemas.manual_sleep_and_recovery import ManualSleepObjectiveInput, ManualSleepSubjectiveInput
+from src.schemas.manual_sleep_and_recovery_schema import ManualSleepObjectiveInput, ManualSleepSubjectiveInput
 from src.services.sleep_and_recovery.manual_sleep_service import ManualSleepService
 
 router = APIRouter(tags=["sleep_and_recovery"])
