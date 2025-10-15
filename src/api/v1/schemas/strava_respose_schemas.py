@@ -17,15 +17,15 @@ class StravaActivitySummary(BaseModel):
     id: int
     name: str
     distance: float = Field(..., description="Distance in meters")
-    moving_time: int = Field(..., description="Moving time in seconds")
+    moving_time: str = Field(..., description="Moving time in seconds")
     total_elevation_gain: float = Field(..., description="Total elevation gain in meters")
     start_date_local: datetime
     timezone: str
     sport_type: str
 
     # Optional fields included in summary
-    average_speed: Optional[float] = Field(None, description="Average speed in m/s")
-    max_speed: Optional[float] = Field(None, description="Max speed in m/s")
+    average_speed: Optional[str] = Field(None, description="Average speed in m/s")
+    max_speed: Optional[str] = Field(None, description="Max speed in m/s")
     average_heartrate: Optional[float] = None
     max_heartrate: Optional[float] = None
 
@@ -39,13 +39,13 @@ class StravaActivitySummary(BaseModel):
             "example": {
                 "id": 123456789,
                 "name": "Morning Run",
-                "distance": 5000.0,
-                "moving_time": 1800,
+                "distance": 5.0,
+                "moving_time": "30:00",
                 "total_elevation_gain": 50.0,
                 "start_date_local": "2025-10-04T07:00:00Z",
                 "timezone": "America/New_York",
-                "average_speed": 2.78,
-                "max_speed": 4.5,
+                "average_speed": "06:00",
+                "max_speed": "04:30",
                 "average_heartrate": 155.0,
                 "max_heartrate": 180.0,
                 "sport_type": "Run",
@@ -161,11 +161,11 @@ class StravaActivityResponse(BaseModel):
                     "weight": 69.0,
                 },
                 "activity_units": {
-                    "distance": "meters",
-                    "moving_time": "seconds",
+                    "distance": "kilometers",
+                    "moving_time": "hhmmss",
                     "total_elevation_gain": "meters",
-                    "average_speed": "m/s",
-                    "max_speed": "m/s",
+                    "average_speed": "mins/km",
+                    "max_speed": "mins/km",
                     "average_heartrate": "bpm",
                     "max_heartrate": "bpm",
                     "elev_high": "meters",
@@ -176,13 +176,13 @@ class StravaActivityResponse(BaseModel):
                     {
                         "id": 123456789,
                         "name": "Morning Run",
-                        "distance": 5000.0,
-                        "moving_time": 1800,
+                        "distance": 5.0,
+                        "moving_time": "30:00",
                         "total_elevation_gain": 50.0,
                         "start_date_local": "2025-10-04T07:00:00Z",
                         "timezone": "America/New_York",
-                        "average_speed": 2.78,
-                        "max_speed": 4.5,
+                        "average_speed": "06:00",
+                        "max_speed": "04:30",
                         "average_heartrate": 155.0,
                         "max_heartrate": 180.0,
                         "sport_type": "Run",

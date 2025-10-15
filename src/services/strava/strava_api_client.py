@@ -106,6 +106,74 @@ class StravaAPIClient(StravaService):
 
         raise APIException(f"Failed to retrieve data after {max_retries} attempts") from last_exception
 
+    @staticmethod
+    def _meters_to_kilometers(meters: float) -> float:
+        """Convert meters to kilometers."""
+        return round(meters / 1000, 2)
+
+    @staticmethod
+    def _seconds_to_mmss(seconds: int) -> str:
+        """Convert seconds to MM:SS format."""
+        minutes = seconds // 60
+        secs = seconds % 60
+        return f"{minutes:02d}:{secs:02d}"
+
+    @staticmethod
+    def _speed_ms_to_pace_per_km(speed_ms: float) -> str:
+        """
+        Convert speed in m/s to pace in MM:SS/km format.
+
+        Args:
+            speed_ms: Speed in meters per second
+
+        Returns:
+            Pace string in MM:SS/km format (e.g., "05:30")
+        """
+        if speed_ms == 0:
+            return "00:00"
+
+        seconds_per_km = 1000 / speed_ms
+
+        minutes = int(seconds_per_km // 60)
+        seconds = int(seconds_per_km % 60)
+
+        return f"{minutes:02d}:{seconds:02d}"
+
+    def _convert_units(self, activity_data: dict) -> dict:
+        """
+        Convert activity units from Strava API raw data to desired format.
+
+        This method transforms the raw API response dictionary before creating
+        a StravaActivity object.
+
+        Conversions:
+        - Distance: meters → kilometers
+        - Moving time: seconds (int) → MM:SS (string)
+        - Average speed: m/s (float) → MM:SS/km (string)
+        - Max speed: m/s (float) → MM:SS/km (string)
+
+        Args:
+            activity_data: Raw activity data dictionary from Strava API
+
+        Returns:
+            Converted activity data dictionary
+        """
+        converted = activity_data.copy()
+
+        if "distance" in converted:
+            converted["distance"] = self._meters_to_kilometers(converted["distance"])
+
+        if "moving_time" in converted:
+            converted["moving_time"] = self._seconds_to_mmss(converted["moving_time"])
+
+        if converted.get("average_speed") is not None:
+            converted["average_speed"] = self._speed_ms_to_pace_per_km(converted["average_speed"])
+
+        if converted.get("max_speed") is not None:
+            converted["max_speed"] = self._speed_ms_to_pace_per_km(converted["max_speed"])
+
+        return converted
+
     @ensure_token
     def get_activities(self, activity_type: ActivityType, limit: int = None) -> StravaServiceResponse:
         """
@@ -127,7 +195,8 @@ class StravaAPIClient(StravaService):
         activities = []
         for item in raw_data:
             try:
-                activity = StravaActivity(**item)
+                converted_activity = self._convert_units(item)
+                activity = StravaActivity(**converted_activity)
                 activities.append(activity)
             except Exception as e:
                 log.warning(f"Failed to parse activity: {str(e)}")

@@ -11,12 +11,12 @@ from pydantic import BaseModel
 
 
 class StravaActivityUnits(BaseModel):
-    distance: Literal["meters", "kilometers", "miles"] = "meters"
-    moving_time: Literal["seconds", "minutes", "hhmmss"] = "seconds"
+    distance: Literal["meters", "kilometers", "miles"] = "kilometers"
+    moving_time: Literal["seconds", "minutes", "hhmmss"] = "hhmmss"
     total_elevation_gain: Literal["meters", "feet"] = "meters"
 
-    average_speed: Optional[Literal["m/s", "km/h", "m/h", "mins/km"]] = "m/s"
-    max_speed: Optional[Literal["m/s", "km/h", "m/h", "mins/km"]] = "m/s"
+    average_speed: Optional[Literal["m/s", "km/h", "m/h", "mins/km"]] = "mins/km"
+    max_speed: Optional[Literal["m/s", "km/h", "m/h", "mins/km"]] = "mins/km"
     average_heartrate: Optional[Literal["bpm"]] = "bpm"
     max_heartrate: Optional[Literal["bpm"]] = "bpm"
 
@@ -27,14 +27,14 @@ class StravaActivityUnits(BaseModel):
 class StravaActivity(BaseModel):
     id: int
     name: str
-    distance: float  # meters
-    moving_time: int  # seconds
-    total_elevation_gain: float  # meters
+    distance: float
+    moving_time: str
+    total_elevation_gain: float
     start_date_local: datetime
     timezone: str
 
-    average_speed: Optional[float] = None  # m/s
-    max_speed: Optional[float] = None  # m/s
+    average_speed: Optional[str] = None
+    max_speed: Optional[str] = None
     average_heartrate: Optional[float] = None
     max_heartrate: Optional[float] = None
 
