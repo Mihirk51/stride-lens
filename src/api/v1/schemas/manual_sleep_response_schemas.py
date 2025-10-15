@@ -1,9 +1,13 @@
+__all__ = [
+    "ManualSleepResponse",
+]
+
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
 
-class RecordManualSleepResponse(BaseModel):
+class ManualSleepResponse(BaseModel):
     success: bool = Field(True, description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
     score: Optional[float] = Field(None, description="Calculated sleep score (0-100)")
@@ -13,7 +17,7 @@ class RecordManualSleepResponse(BaseModel):
     sleep_id: Optional[str] = Field(None, description="Unique identifier for the sleep record")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Sleep data recorded successfully",

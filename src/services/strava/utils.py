@@ -3,6 +3,8 @@ __all__ = [
 ]
 
 import os
+from datetime import datetime
+from typing import Any, Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -20,9 +22,9 @@ ENV_FILE = Constants.ENV_FILE
 api_client = BaseAPIClient(base_url=Constants.STRAVA_BASE_URL)
 
 
-def refresh_strava_token():
+def refresh_strava_token(target_obj: Optional[Any] = None) -> Tuple[str, str]:
     """Refresh the Strava access token using the refresh token and update the .env file."""
-    load_dotenv(ENV_FILE)
+    load_dotenv(ENV_FILE, override=True)
 
     client_id = os.getenv("STRAVA_CLIENT_ID")
     client_secret = os.getenv("STRAVA_CLIENT_SECRET")
@@ -46,16 +48,19 @@ def refresh_strava_token():
     tokens = response.get_json()
     access_token = tokens["access_token"]
     new_refresh_token = tokens["refresh_token"]
-    expiry_time = tokens["expires_at"]
+    expiry_time_iso = datetime.fromtimestamp(tokens["expires_at"]).isoformat()
 
-    log.info("Successfully refreshed Strava token!")
-    log.info(f"New access_token: {access_token[:10]}... (truncated)")
-    log.info(f"New refresh_token: {new_refresh_token[:10]}... (truncated)")
-
-    # Update the .env file
     update_env_file("STRAVA_ACCESS_TOKEN", access_token)
     update_env_file("STRAVA_REFRESH_TOKEN", new_refresh_token)
-    update_env_file("STRAVA_ACCESS_TOKEN_EXPIRY", expiry_time)
+    update_env_file("STRAVA_ACCESS_TOKEN_EXPIRY", expiry_time_iso)
+
+    access_token = load_access_token()
+
+    if target_obj:
+        target_obj.access_token = access_token
+        target_obj.token_expiry = expiry_time_iso
+
+    return access_token, expiry_time_iso
 
 
 def update_env_file(key, value):
@@ -79,6 +84,20 @@ def update_env_file(key, value):
     with open(ENV_FILE, "w") as f:
         f.writelines(lines)
     log.info(f"Updated {key} in {ENV_FILE}")
+
+
+def load_access_token() -> str:
+    import os
+
+    from dotenv import load_dotenv
+
+    load_dotenv(Constants.ENV_FILE, override=True)
+    access_token = os.getenv("STRAVA_ACCESS_TOKEN")
+    if not access_token:
+        raise ValueError("STRAVA_ACCESS_TOKEN not found in .env file")
+
+    return access_token
+
 
 if __name__ == "__main__":
     refresh_strava_token()
