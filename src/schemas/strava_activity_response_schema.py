@@ -5,9 +5,23 @@ __all__ = [
 ]
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel
+
+
+class StravaActivityUnits(BaseModel):
+    distance: Literal["meters", "kilometers", "miles"] = "meters"
+    moving_time: Literal["seconds", "minutes", "hhmmss"] = "seconds"
+    total_elevation_gain: Literal["meters", "feet"] = "meters"
+
+    average_speed: Optional[Literal["m/s", "km/h", "m/h", "mins/km"]] = "m/s"
+    max_speed: Optional[Literal["m/s", "km/h", "m/h", "mins/km"]] = "m/s"
+    average_heartrate: Optional[Literal["bpm"]] = "bpm"
+    max_heartrate: Optional[Literal["bpm"]] = "bpm"
+
+    elev_high: Literal["meters", "feet"] = "meters"
+    elev_low: Literal["meters", "feet"] = "meters"
 
 
 class StravaActivity(BaseModel):
@@ -57,5 +71,6 @@ class StravaAthleteProfile(BaseModel):
 
 
 class StravaServiceResponse(BaseModel):
+    activity_units: StravaActivityUnits = StravaActivityUnits()
     activities: List[StravaActivity]
     athlete_profile: Optional[StravaAthleteProfile] = None

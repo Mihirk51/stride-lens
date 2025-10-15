@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from src.schemas.strava_activity_response_schema import StravaActivity, StravaAthleteProfile
+from src.schemas.strava_activity_response_schema import StravaActivity, StravaActivityUnits, StravaAthleteProfile
 
 
 class StravaActivitySummary(BaseModel):
@@ -95,6 +95,7 @@ class StravaActivityResponse(BaseModel):
     success: bool = Field(True, description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
     athlete_profile: Optional[StravaAthleteProfileSummary] = Field(None, description="Athlete profile information")
+    activity_units: Optional[StravaActivityUnits] = Field(None, description="Units for activity metrics")
     activity: Optional[StravaActivitySummary] = Field(None, description="Single Strava activity data")
     activities: Optional[List[StravaActivitySummary]] = Field(None, description="List of Strava activities")
 
@@ -158,6 +159,17 @@ class StravaActivityResponse(BaseModel):
                     "sex": "M",
                     "premium": False,
                     "weight": 69.0,
+                },
+                "activity_units": {
+                    "distance": "meters",
+                    "moving_time": "seconds",
+                    "total_elevation_gain": "meters",
+                    "average_speed": "m/s",
+                    "max_speed": "m/s",
+                    "average_heartrate": "bpm",
+                    "max_heartrate": "bpm",
+                    "elev_high": "meters",
+                    "elev_low": "meters",
                 },
                 "activity": None,
                 "activities": [

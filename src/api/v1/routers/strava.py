@@ -20,6 +20,7 @@ def get_recent_runs():
         success=True,
         message="Recent runs retrieved successfully",
         athlete_profile=result.athlete_profile,
+        activity_units=result.activity_units,
         activities=result.activities,
     )
 
@@ -36,6 +37,7 @@ def get_recent_activities():
         success=True,
         message="Recent activities retrieved successfully",
         athlete_profile=result.athlete_profile,
+        activity_units=result.activity_units,
         activities=result.activities,
     )
 
