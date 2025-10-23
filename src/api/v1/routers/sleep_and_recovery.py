@@ -2,6 +2,7 @@ import uuid
 from typing import Optional
 
 from fastapi import APIRouter
+from pydantic import ValidationError
 
 from src.api.v1.schemas.manual_sleep_response_schemas import ManualSleepResponse
 from src.schemas.manual_sleep_and_recovery_schema import ManualSleepObjectiveInput, ManualSleepSubjectiveInput
@@ -33,7 +34,7 @@ def record_subjective_sleep(subjective_rating: int) -> ManualSleepResponse:
     )
 
 
-@router.get(
+@router.post(
     "/manual/objective",
     response_model=ManualSleepResponse,
     summary="Record Objective Sleep",
@@ -48,15 +49,18 @@ def record_objective_sleep(
     recovery_percent: Optional[float] = None,
     sleep_score_percent: Optional[float] = None,
 ) -> ManualSleepResponse:
-    data = ManualSleepObjectiveInput(
-        time_in_bed_minutes=time_in_bed_minutes,
-        time_awake_minutes=time_awake_minutes,
-        rem_sleep_minutes=rem_sleep_minutes,
-        core_sleep_minutes=core_sleep_minutes,
-        deep_sleep_minutes=deep_sleep_minutes,
-        recovery_percent=recovery_percent,
-        sleep_score_percent=sleep_score_percent,
-    )
+    try:
+        data = ManualSleepObjectiveInput(
+            time_in_bed_minutes=time_in_bed_minutes,
+            time_awake_minutes=time_awake_minutes,
+            rem_sleep_minutes=rem_sleep_minutes,
+            core_sleep_minutes=core_sleep_minutes,
+            deep_sleep_minutes=deep_sleep_minutes,
+            recovery_percent=recovery_percent,
+            sleep_score_percent=sleep_score_percent,
+        )
+    except ValidationError:
+        raise
 
     result = sleep_service.record_sleep(data)
 
