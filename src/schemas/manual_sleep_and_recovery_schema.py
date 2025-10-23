@@ -2,7 +2,7 @@ __all__ = ["ManualSleepSubjectiveInput", "ManualSleepObjectiveInput", "ManualSle
 
 from typing import Any, Dict, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ManualSleepSubjectiveInput(BaseModel):
@@ -18,12 +18,55 @@ class ManualSleepObjectiveInput(BaseModel):
     recovery_percent: Optional[float] = Field(None, ge=0, le=100, description="Recovery percentage (0-100)")
     sleep_score_percent: Optional[float] = Field(None, ge=0, le=100, description="Overall sleep score (0-100)")
 
+    @model_validator(mode="after")
+    def validate_sleep_minutes(self):
+        """Validate that sleep component minutes sum to time_in_bed_minutes."""
+        time_in_bed = self.time_in_bed_minutes
+        time_awake = self.time_awake_minutes or 0
+        rem_sleep = self.rem_sleep_minutes or 0
+        core_sleep = self.core_sleep_minutes or 0
+        deep_sleep = self.deep_sleep_minutes or 0
+
+        # Only validate if time_in_bed is provided
+        if time_in_bed is not None:
+            total_minutes = time_awake + rem_sleep + core_sleep + deep_sleep
+
+            if total_minutes != time_in_bed:
+                raise ValueError(
+                    f"Sum of time_awake_minutes, rem_sleep_minutes, core_sleep_minutes, "
+                    f"and deep_sleep_minutes ({total_minutes}) must equal "
+                    f"time_in_bed_minutes ({time_in_bed})"
+                )
+
+        if not any(
+            [
+                self.time_in_bed_minutes,
+                self.time_awake_minutes,
+                self.rem_sleep_minutes,
+                self.core_sleep_minutes,
+                self.deep_sleep_minutes,
+                self.recovery_percent,
+                self.sleep_score_percent,
+            ]
+        ):
+            raise ValueError("At least one objective sleep metric must be provided.")
+
+        return self
+
     class Config:
-        @staticmethod
-        def validate_model(values):
-            if not any(values.values()):
-                raise ValueError("At least one objective sleep metric must be provided.")
-            return values
+        json_schema_extra = {
+            "examples": [
+                {
+                    "time_in_bed_minutes": 480,
+                    "time_awake_minutes": 30,
+                    "rem_sleep_minutes": 120,
+                    "core_sleep_minutes": 240,
+                    "deep_sleep_minutes": 90,
+                    "recovery_percent": 85.5,
+                    "sleep_score_percent": 82.0,
+                }
+            ]
+        }
 
 
 class ManualSleepServiceResponse(BaseModel):
