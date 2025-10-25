@@ -22,8 +22,7 @@ class Constants(constants.Constants):
     STRAVA_API_BASE_URL = "https://www.strava.com/api/v3"
     STRAVA_ATHLETE_ENDPOINT = "/athlete"
     STRAVA_ACTIVITIES_ENDPOINT = "/athlete/activities"
-    STRAVA_ACTIVITY_LIMIT = 10
-    pass
+    STRAVA_ACTIVITY_LIMIT = 20
 
 
 class ActivityType(str, Enum):
