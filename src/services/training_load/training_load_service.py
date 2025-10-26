@@ -6,7 +6,14 @@ from datetime import datetime, timedelta, timezone
 
 from src.core import constants
 from src.core.loggers import logger
+from src.interfaces.training_load import ITrainingLoadService
 from src.schemas.strava_activity_response_schema import StravaActivity
+from src.schemas.training_load_response_schema import (
+    ACWRInterpretation,
+    ACWRResponse,
+    TrainingLoadInterpretation,
+    TrainingLoadRatioResponse,
+)
 from src.services.strava.strava_api_client import ActivityType, StravaAPIClient
 
 log = logger
@@ -17,7 +24,7 @@ class Constants(constants.Constants):
     TRAINING_LOAD_DEFAULT_WEEKS = 4
 
 
-class TrainingLoadService:
+class TrainingLoadService(ITrainingLoadService):
     def __init__(self, strava_client: StravaAPIClient):
         self.strava_client = strava_client
         self.activities: list[StravaActivity] = list()
@@ -75,44 +82,49 @@ class TrainingLoadService:
 
         return sum(activity.distance for activity in recent_activities)
 
-    def calculate_training_load_ratio(self, weeks_baseline: int = 4) -> dict:
+    def calculate_training_load_ratio(self, weeks_baseline: int = 4) -> TrainingLoadRatioResponse:
         """
         Calculate training load ratio: current week / baseline average.
 
         Returns:
-            Dictionary with load metrics and interpretation
+            TrainingLoadRatioResponse with load metrics and interpretation
         """
         baseline = self.get_baseline_weekly_mileage(weeks=weeks_baseline)
         current = self.calculate_7_days_load()
 
         if not baseline:
-            ratio = None
-            interpretation = "insufficient_baseline"
+            return TrainingLoadRatioResponse(
+                current_week_km=round(current, 2),
+                baseline_weekly_km=0.0,
+                load_ratio=None,
+                interpretation=TrainingLoadInterpretation.INSUFFICIENT_BASELINE,
+                weeks_analyzed=weeks_baseline,
+            )
+
+        ratio = round(current / baseline, 2)
+
+        if ratio < 0.7:
+            interpretation = TrainingLoadInterpretation.CONSIDERABLY_UNDERTRAINING
+        elif ratio < 0.9:
+            interpretation = TrainingLoadInterpretation.LIGHTLY_UNDERTRAINING
+        elif ratio <= 1.1:
+            interpretation = TrainingLoadInterpretation.NORMAL
+        elif ratio <= 1.3:
+            interpretation = TrainingLoadInterpretation.MODERATELY_OVERTRAINING
+        elif ratio <= 1.5:
+            interpretation = TrainingLoadInterpretation.HIGHLY_OVERTRAINING
         else:
-            ratio = round(current / baseline + 1e-6, 2)
+            interpretation = TrainingLoadInterpretation.VERY_HIGHLY_OVERTRAINING
 
-            if ratio < 0.7:
-                interpretation = "considerably undertraining"
-            elif ratio < 0.9:
-                interpretation = "lighty undertraining"
-            elif ratio <= 1.1:
-                interpretation = "normal"
-            elif ratio <= 1.3:
-                interpretation = "moderately overtraining"
-            elif ratio <= 1.5:
-                interpretation = "highly overtraining"
-            else:
-                interpretation = "very highly overtraining"
+        return TrainingLoadRatioResponse(
+            current_week_km=round(current, 2),
+            baseline_weekly_km=round(baseline, 2),
+            load_ratio=ratio,
+            interpretation=interpretation,
+            weeks_analyzed=weeks_baseline,
+        )
 
-        return {
-            "current_week_km": current,
-            "baseline_weekly_km": baseline,
-            "load_ratio": ratio,
-            "interpretation": interpretation,
-            "weeks_analyzed": weeks_baseline,
-        }
-
-    def calculate_acute_chronic_ratio(self) -> dict:
+    def calculate_acute_chronic_ratio(self) -> ACWRResponse:
         """
         Calculate Acute:Chronic Workload Ratio (ACWR).
 
@@ -128,30 +140,30 @@ class TrainingLoadService:
         ctl = self.get_baseline_weekly_mileage(weeks=Constants.TRAINING_LOAD_DEFAULT_WEEKS)
 
         if ctl == 0:
-            return {
-                "acute_load_km": atl,
-                "chronic_load_km": ctl,
-                "acwr": None,
-                "interpretation": "insufficient_baseline",
-            }
+            return ACWRResponse(
+                acute_load_km=round(atl, 2),
+                chronic_load_km=0.0,
+                acwr=None,
+                interpretation=ACWRInterpretation.INSUFFICIENT_BASELINE,
+            )
 
         acwr = round(atl / ctl, 2)
 
         if acwr < 0.8:
-            interpretation = "detraining_risk"
+            interpretation = ACWRInterpretation.DETRAINING_RISK
         elif acwr <= 1.3:
-            interpretation = "optimal"
+            interpretation = ACWRInterpretation.OPTIMAL
         elif acwr <= 1.5:
-            interpretation = "moderate_risk"
+            interpretation = ACWRInterpretation.MODERATE_RISK
         else:
-            interpretation = "high_injury_risk"
+            interpretation = ACWRInterpretation.HIGH_INJURY_RISK
 
-        return {
-            "acute_load_km": atl,
-            "chronic_load_km": ctl,
-            "acwr": acwr,
-            "interpretation": interpretation,
-        }
+        return ACWRResponse(
+            acute_load_km=round(atl, 2),
+            chronic_load_km=round(ctl, 2),
+            acwr=acwr,
+            interpretation=interpretation,
+        )
 
 
 if __name__ == "__main__":
