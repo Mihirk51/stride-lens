@@ -1,17 +1,23 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from src.api.v1.schemas.weather_response_schemas import CurrentWeatherResponse, ForecastWeatherResponse
+from src.core import constants
+from src.core.clients.base_api_client import BaseAPIClient
 from src.schemas.weather_api_response_schema import CurrentWeatherRequestParams, WeatherForecastRequestParams
 from src.services.lat_lon import lat_lon_service
 from src.services.weather import OpenMeteoWeatherAPIClient
 
 router = APIRouter(tags=["weather"])
 
-weather_api_client = OpenMeteoWeatherAPIClient()
 
-lat_lon = lat_lon_service.get_lat_lon()
-lat = lat_lon.latitude
-lon = lat_lon.longitude
+class Constants(constants.Constants):
+    pass
+
+
+def get_weather_client() -> OpenMeteoWeatherAPIClient:
+    """Dependency that provides a configured OpenMeteoWeatherAPIClient instance."""
+    api_client = BaseAPIClient(base_url=Constants.OPEN_METEO_BASE_URL)
+    return OpenMeteoWeatherAPIClient(api_client)
 
 
 @router.get(
@@ -20,10 +26,11 @@ lon = lat_lon.longitude
     summary="Get current weather from weather client",
     operation_id="get_current_weather",
 )
-def get_current_weather():
-    request_params = CurrentWeatherRequestParams(latitude=lat, longitude=lon)
+def get_current_weather(weather_client: OpenMeteoWeatherAPIClient = Depends(get_weather_client)):
+    lat_lon = lat_lon_service.get_lat_lon()
+    request_params = CurrentWeatherRequestParams(latitude=lat_lon.latitude, longitude=lat_lon.longitude)
 
-    result = weather_api_client.get_current_weather(request_params)
+    result = weather_client.get_current_weather(request_params)
 
     return CurrentWeatherResponse(success=True, message="Current weather retrieved successfully", weather_data=result)
 
@@ -34,9 +41,14 @@ def get_current_weather():
     summary="Get weather forecast from weather client",
     operation_id="get_weather_forecast",
 )
-def get_weather_forecast(forecast_days: int = 3):
-    request_params = WeatherForecastRequestParams(latitude=lat, longitude=lon, forecast_days=forecast_days)
+def get_weather_forecast(
+    forecast_days: int = 3, weather_client: OpenMeteoWeatherAPIClient = Depends(get_weather_client)
+):
+    lat_lon = lat_lon_service.get_lat_lon()
+    request_params = WeatherForecastRequestParams(
+        latitude=lat_lon.latitude, longitude=lat_lon.longitude, forecast_days=forecast_days
+    )
 
-    result = weather_api_client.get_weather_forecast(request_params)
+    result = weather_client.get_weather_forecast(request_params)
 
     return ForecastWeatherResponse(success=True, message="Weather forecast retrieved successfully", weather_data=result)

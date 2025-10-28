@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import ValidationError
 
 from src.api.v1.schemas.manual_sleep_response_schemas import ManualSleepResponse
@@ -10,7 +10,10 @@ from src.services.sleep_and_recovery.manual_sleep_service import ManualSleepServ
 
 router = APIRouter(tags=["sleep_and_recovery"])
 
-sleep_service = ManualSleepService()
+
+def get_sleep_service() -> ManualSleepService:
+    """Dependency that provides a ManualSleepService instance."""
+    return ManualSleepService()
 
 
 @router.get(
@@ -19,7 +22,9 @@ sleep_service = ManualSleepService()
     summary="Record Subjective Sleep",
     operation_id="record_subjective_sleep",
 )
-def record_subjective_sleep(subjective_rating: int) -> ManualSleepResponse:
+def record_subjective_sleep(
+    subjective_rating: int, sleep_service: ManualSleepService = Depends(get_sleep_service)
+) -> ManualSleepResponse:
     data = ManualSleepSubjectiveInput(subjective_rating=subjective_rating)
 
     result = sleep_service.record_sleep(data)
@@ -48,6 +53,7 @@ def record_objective_sleep(
     deep_sleep_minutes: Optional[int] = None,
     recovery_percent: Optional[float] = None,
     sleep_score_percent: Optional[float] = None,
+    sleep_service: ManualSleepService = Depends(get_sleep_service),
 ) -> ManualSleepResponse:
     try:
         data = ManualSleepObjectiveInput(

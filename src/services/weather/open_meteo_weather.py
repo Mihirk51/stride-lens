@@ -1,7 +1,6 @@
 __all__ = [
     "OpenMeteoWeatherAPIClient",
 ]
-
 from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
 from src.core.config import OpenMeteoCurrentWeatherConfig, OpenMeteoForecastConfig
@@ -21,8 +20,8 @@ class Constants(constants.Constants):
 
 
 class OpenMeteoWeatherAPIClient(WeatherService):
-    def __init__(self, base_url: str = Constants.OPEN_METEO_BASE_URL):
-        self.client = BaseAPIClient(base_url=base_url)
+    def __init__(self, api_client: BaseAPIClient):
+        self.client = api_client
 
     def get_current_weather(self, current_weather_params: CurrentWeatherRequestParams) -> CurrentWeatherAPIResponse:
         lat = current_weather_params.latitude
@@ -82,7 +81,8 @@ class OpenMeteoWeatherAPIClient(WeatherService):
 
 
 if __name__ == "__main__":
-    weather_api_client = OpenMeteoWeatherAPIClient()
+    api_client = BaseAPIClient(base_url=Constants.OPEN_METEO_BASE_URL)
+    weather_api_client = OpenMeteoWeatherAPIClient(api_client)
 
     lat_lon = lat_lon_service.get_lat_lon()
     lat = lat_lon.latitude
