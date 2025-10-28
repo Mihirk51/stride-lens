@@ -19,7 +19,6 @@ log = logger
 
 
 class Constants(constants.Constants):
-    STRAVA_API_BASE_URL = "https://www.strava.com/api/v3"
     STRAVA_ATHLETE_ENDPOINT = "/athlete"
     STRAVA_ACTIVITIES_ENDPOINT = "/athlete/activities"
     STRAVA_ACTIVITY_LIMIT = 20
@@ -40,9 +39,9 @@ def ensure_token(func):
 
 
 class StravaAPIClient(StravaService):
-    def __init__(self):
+    def __init__(self, api_client: BaseAPIClient):
         self.access_token, self.token_expiry = refresh_strava_token(target_obj=self)
-        self.api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
+        self.api_client = api_client
 
     def _headers(self):
         return {"Authorization": f"Bearer {self.access_token}"}
@@ -212,7 +211,8 @@ class StravaAPIClient(StravaService):
 
 
 def main():
-    strava_api_client = StravaAPIClient()
+    api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
+    strava_api_client = StravaAPIClient(api_client)
     runs_models = strava_api_client.get_activities(ActivityType.RECENT_RUNS, limit=5)
 
     for run in runs_models:

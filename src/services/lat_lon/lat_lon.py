@@ -8,12 +8,12 @@ from src.schemas.lat_lon_response_schema import LatLonServiceResponse
 
 
 class GetLatLon:
-    def __init__(self):
-        self.g = geocoder.ip("me")
+    def __init__(self, geocoder_instance: geocoder):
+        self.g = geocoder_instance.ip("me")
 
     def get_lat_lon(self) -> LatLonServiceResponse:
         lat, lon = self.g.latlng
         return LatLonServiceResponse(latitude=lat, longitude=lon)
 
 
-lat_lon_service = GetLatLon()
+lat_lon_service = GetLatLon(geocoder)

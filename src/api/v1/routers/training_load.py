@@ -1,13 +1,23 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from src.api.v1.schemas.training_load_response_schema import ACWRAPIResponse, TrainingLoadAPIResponse
+from src.core import constants
+from src.core.clients.base_api_client import BaseAPIClient
 from src.services.strava.strava_api_client import StravaAPIClient
 from src.services.training_load.training_load_service import TrainingLoadService
 
 router = APIRouter(tags=["training_load"])
 
-strava_client = StravaAPIClient()
-training_load_service = TrainingLoadService(strava_client=strava_client)
+
+class Constants(constants.Constants):
+    pass
+
+
+def get_training_load_service() -> TrainingLoadService:
+    """Dependency that provides a TrainingLoadService instance."""
+    api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
+    strava_client = StravaAPIClient(api_client)
+    return TrainingLoadService(strava_client=strava_client)
 
 
 @router.get(
@@ -32,6 +42,7 @@ def get_training_load(
         le=12,
         description="Number of weeks to use for baseline calculation",
     ),
+    training_load_service: TrainingLoadService = Depends(get_training_load_service),
 ):
     """Analyze current training load relative to athlete's baseline."""
     result = training_load_service.calculate_training_load_ratio(weeks_baseline=weeks_baseline)
@@ -58,7 +69,9 @@ def get_training_load(
     - **<0.8**: Detraining risk
     """,
 )
-def get_acwr():
+def get_acwr(
+    training_load_service: TrainingLoadService = Depends(get_training_load_service),
+):
     """Calculate Acute:Chronic Workload Ratio for injury risk assessment."""
     result = training_load_service.calculate_acute_chronic_ratio()
 

@@ -5,6 +5,7 @@ __all__ = [
 from datetime import datetime, timedelta, timezone
 
 from src.core import constants
+from src.core.clients.base_api_client import BaseAPIClient
 from src.core.loggers import logger
 from src.interfaces.training_load import ITrainingLoadService
 from src.schemas.strava_activity_response_schema import StravaActivity
@@ -167,6 +168,7 @@ class TrainingLoadService(ITrainingLoadService):
 
 
 if __name__ == "__main__":
-    strava_client = StravaAPIClient()
+    api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
+    strava_client = StravaAPIClient(api_client)
     training_load_service = TrainingLoadService(strava_client=strava_client)
     acute_chronic_ratio = training_load_service.calculate_acute_chronic_ratio()

@@ -9,3 +9,4 @@ class Constants:
     ENV_FILE = ".env"
     STRAVA_TOKEN_ENDPOINT = "/oauth/token"
     STRAVA_BASE_URL = "https://www.strava.com"
+    STRAVA_API_BASE_URL = "https://www.strava.com/api/v3"

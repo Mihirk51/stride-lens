@@ -1,11 +1,21 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from src.api.v1.schemas.strava_respose_schemas import StravaActivityResponse
+from src.core import constants
+from src.core.clients.base_api_client import BaseAPIClient
 from src.services.strava.strava_api_client import ActivityType, StravaAPIClient
 
 router = APIRouter(tags=["strava_activities"])
 
-strava_api_client = StravaAPIClient()
+
+class Constants(constants.Constants):
+    pass
+
+
+def get_strava_client() -> StravaAPIClient:
+    """Dependency that provides a configured StravaAPIClient instance."""
+    api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
+    return StravaAPIClient(api_client)
 
 
 @router.get(
@@ -14,8 +24,8 @@ strava_api_client = StravaAPIClient()
     summary="Get Recent Runs from Strava",
     operation_id="get_recent_runs",
 )
-def get_recent_runs():
-    result = strava_api_client.get_activities(ActivityType.RECENT_RUNS)
+def get_recent_runs(strava_client: StravaAPIClient = Depends(get_strava_client)):
+    result = strava_client.get_activities(ActivityType.RECENT_RUNS)
     return StravaActivityResponse(
         success=True,
         message="Recent runs retrieved successfully",
@@ -31,8 +41,8 @@ def get_recent_runs():
     summary="Get Recent Activities from Strava",
     operation_id="get_recent_activities",
 )
-def get_recent_activities():
-    result = strava_api_client.get_activities(ActivityType.RECENT_ACTIVITIES)
+def get_recent_activities(strava_client: StravaAPIClient = Depends(get_strava_client)):
+    result = strava_client.get_activities(ActivityType.RECENT_ACTIVITIES)
     return StravaActivityResponse(
         success=True,
         message="Recent activities retrieved successfully",
@@ -48,8 +58,8 @@ def get_recent_activities():
     summary="Get Athlete profile from Strava",
     operation_id="get_athlete_profile",
 )
-def get_athlete_profile():
-    result = strava_api_client.get_activities(ActivityType.ATHLETE_PROFILE)
+def get_athlete_profile(strava_client: StravaAPIClient = Depends(get_strava_client)):
+    result = strava_client.get_activities(ActivityType.ATHLETE_PROFILE)
     return StravaActivityResponse(
         success=True,
         message="Athlete Profile retrieved successfully",
