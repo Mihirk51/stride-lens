@@ -2,7 +2,7 @@ __all__ = [
     "BaseSleepService",
 ]
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, Optional
 
 from src.interfaces.sleep import SleepService
@@ -13,11 +13,6 @@ class BaseSleepService(SleepService, ABC):
     Base class for all sleep services.
     Provides shared helpers for score calculation, normalization, and warnings.
     """
-
-    @abstractmethod
-    def record_sleep(self, data: Any) -> dict:
-        """All sleep services must implement how they record sleep data."""
-        pass
 
     def _normalize_minutes(self, field: str, value: int) -> float:
         if field == "deep_sleep_minutes":

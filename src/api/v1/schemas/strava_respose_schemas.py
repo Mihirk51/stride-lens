@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from src.schemas.strava_activity_response_schema import StravaActivity, StravaActivityUnits, StravaAthleteProfile
+from src.schemas.strava_activity_schema import StravaActivity, StravaActivityUnits, StravaAthleteProfile
 
 
 class StravaActivitySummary(BaseModel):

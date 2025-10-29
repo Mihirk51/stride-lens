@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from src.api.v1.schemas.weather_response_schemas import CurrentWeatherResponse, ForecastWeatherResponse
 from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
-from src.schemas.weather_api_response_schema import CurrentWeatherRequestParams, WeatherForecastRequestParams
+from src.schemas.weather_api_schema import CurrentWeatherRequestParams, WeatherForecastRequestParams
 from src.services.lat_lon import lat_lon_service
 from src.services.weather import OpenMeteoWeatherAPIClient
 

@@ -4,6 +4,11 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 
+from src.schemas.training_load_schema import (
+    ACWRResponse,
+    TrainingLoadRatioResponse,
+)
+
 
 class ITrainingLoadService(ABC):
     @abstractmethod
@@ -17,7 +22,7 @@ class ITrainingLoadService(ABC):
         pass
 
     @abstractmethod
-    def calculate_training_load_ratio(self, weeks_baseline: int = 4) -> dict:
+    def calculate_training_load_ratio(self, weeks_baseline: int = 4) -> TrainingLoadRatioResponse:
         """
         Calculate training load ratio: current week / baseline average.
 
@@ -27,7 +32,7 @@ class ITrainingLoadService(ABC):
         pass
 
     @abstractmethod
-    def calculate_acute_chronic_ratio(self) -> dict:
+    def calculate_acute_chronic_ratio(self) -> ACWRResponse:
         """
         Calculate acute to chronic training load ratio.
 

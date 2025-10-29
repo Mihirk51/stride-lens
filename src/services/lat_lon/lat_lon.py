@@ -4,7 +4,7 @@ __all__ = [
 
 import geocoder
 
-from src.schemas.lat_lon_response_schema import LatLonServiceResponse
+from src.schemas.lat_lon_schema import LatLonServiceResponse
 
 
 class GetLatLon:
