@@ -8,7 +8,7 @@ from typing import Dict, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from src.schemas.weather_api_response_schema import CurrentWeatherAPIResponse, ForecastWeatherAPIResponse, HourlyWeatherData
+from src.schemas.weather_api_schema import CurrentWeatherAPIResponse, ForecastWeatherAPIResponse, HourlyWeatherData
 
 
 class CurrentWeatherSummary(BaseModel):

@@ -5,7 +5,7 @@ __all__ = [
 
 from pydantic import BaseModel, Field
 
-from src.schemas.training_load_response_schema import ACWRResponse, TrainingLoadRatioResponse
+from src.schemas.training_load_schema import ACWRResponse, TrainingLoadRatioResponse
 
 
 class TrainingLoadAPIResponse(BaseModel):

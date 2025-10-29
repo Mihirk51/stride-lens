@@ -4,7 +4,7 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 
-from src.schemas.training_load_response_schema import (
+from src.schemas.training_load_schema import (
     ACWRResponse,
     TrainingLoadRatioResponse,
 )

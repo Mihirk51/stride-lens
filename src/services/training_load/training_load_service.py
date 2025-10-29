@@ -8,8 +8,8 @@ from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
 from src.core.loggers import logger
 from src.interfaces.training_load import ITrainingLoadService
-from src.schemas.strava_activity_response_schema import StravaActivity
-from src.schemas.training_load_response_schema import (
+from src.schemas.strava_activity_schema import StravaActivity
+from src.schemas.training_load_schema import (
     ACWRInterpretation,
     ACWRResponse,
     TrainingLoadInterpretation,

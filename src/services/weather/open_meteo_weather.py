@@ -5,7 +5,7 @@ from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
 from src.core.config import OpenMeteoCurrentWeatherConfig, OpenMeteoForecastConfig
 from src.interfaces.weather import WeatherService
-from src.schemas.weather_api_response_schema import (
+from src.schemas.weather_api_schema import (
     CurrentWeatherAPIResponse,
     CurrentWeatherRequestParams,
     ForecastWeatherAPIResponse,

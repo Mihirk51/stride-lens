@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.schemas.weather_api_response_schema import (
+from src.schemas.weather_api_schema import (
     CurrentWeatherAPIResponse,
     CurrentWeatherRequestParams,
     ForecastWeatherAPIResponse,
