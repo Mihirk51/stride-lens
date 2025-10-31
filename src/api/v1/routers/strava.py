@@ -1,21 +1,10 @@
 from fastapi import APIRouter, Depends
 
+from src.api.dependencies import get_strava_client
 from src.api.v1.schemas.strava_respose_schemas import StravaActivityResponse
-from src.core import constants
-from src.core.clients.base_api_client import BaseAPIClient
 from src.services.strava.strava_api_client import ActivityType, StravaAPIClient
 
 router = APIRouter(tags=["strava_activities"])
-
-
-class Constants(constants.Constants):
-    pass
-
-
-def get_strava_client() -> StravaAPIClient:
-    """Dependency that provides a configured StravaAPIClient instance."""
-    api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
-    return StravaAPIClient(api_client)
 
 
 @router.get(
