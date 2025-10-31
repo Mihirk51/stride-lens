@@ -1,23 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 
+from src.api.dependencies import get_training_load_service
 from src.api.v1.schemas.training_load_response_schema import ACWRAPIResponse, TrainingLoadAPIResponse
-from src.core import constants
-from src.core.clients.base_api_client import BaseAPIClient
-from src.services.strava.strava_api_client import StravaAPIClient
 from src.services.training_load.training_load_service import TrainingLoadService
 
 router = APIRouter(tags=["training_load"])
-
-
-class Constants(constants.Constants):
-    pass
-
-
-def get_training_load_service() -> TrainingLoadService:
-    """Dependency that provides a TrainingLoadService instance."""
-    api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
-    strava_client = StravaAPIClient(api_client)
-    return TrainingLoadService(strava_client=strava_client)
 
 
 @router.get(

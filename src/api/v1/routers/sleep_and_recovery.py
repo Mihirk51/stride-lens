@@ -4,16 +4,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from pydantic import ValidationError
 
+from src.api.dependencies import get_sleep_service
 from src.api.v1.schemas.manual_sleep_response_schemas import ManualSleepResponse
 from src.schemas.manual_sleep_and_recovery_schema import ManualSleepObjectiveInput, ManualSleepSubjectiveInput
 from src.services.sleep_and_recovery.manual_sleep_service import ManualSleepService
 
 router = APIRouter(tags=["sleep_and_recovery"])
-
-
-def get_sleep_service() -> ManualSleepService:
-    """Dependency that provides a ManualSleepService instance."""
-    return ManualSleepService()
 
 
 @router.get(
