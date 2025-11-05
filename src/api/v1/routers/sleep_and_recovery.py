@@ -12,7 +12,7 @@ from src.services.sleep_and_recovery.manual_sleep_service import ManualSleepServ
 router = APIRouter(tags=["sleep_and_recovery"])
 
 
-@router.get(
+@router.post(
     "/manual/subjective",
     response_model=ManualSleepResponse,
     summary="Record Subjective Sleep",
