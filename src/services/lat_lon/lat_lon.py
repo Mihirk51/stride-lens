@@ -1,5 +1,6 @@
 __all__ = [
     "lat_lon_service",
+    "LatLonService",
 ]
 
 import geocoder
@@ -7,7 +8,7 @@ import geocoder
 from src.schemas.lat_lon_schema import LatLonServiceResponse
 
 
-class GetLatLon:
+class LatLonService:
     def __init__(self, geocoder_instance: geocoder):
         self.g = geocoder_instance.ip("me")
 
@@ -16,4 +17,4 @@ class GetLatLon:
         return LatLonServiceResponse(latitude=lat, longitude=lon)
 
 
-lat_lon_service = GetLatLon(geocoder)
+lat_lon_service = LatLonService(geocoder)

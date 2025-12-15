@@ -2,3 +2,6 @@ pydantic
 geocoder
 fastapi==0.118.0
 uvicorn==0.37.0
+requests
+python-dotenv
+pytest==9.0.2

@@ -4,12 +4,16 @@ __all__ = [
     "get_weather_client",
     "get_training_load_service",
     "get_sleep_service",
+    "get_lat_lon_service",
 ]
 
 from functools import lru_cache
 
+import geocoder
+
 from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
+from src.services.lat_lon import LatLonService
 from src.services.sleep_and_recovery.manual_sleep_service import ManualSleepService
 from src.services.strava.strava_api_client import StravaAPIClient
 from src.services.training_load.training_load_service import TrainingLoadService
@@ -63,3 +67,9 @@ def get_training_load_service() -> TrainingLoadService:
 def get_sleep_service() -> ManualSleepService:
     """Dependency that provides a singleton ManualSleepService instance."""
     return ManualSleepService()
+
+
+@lru_cache()
+def get_lat_lon_service() -> LatLonService:
+    """Dependency that provides a singleton LatLonService instance."""
+    return LatLonService(geocoder_instance=geocoder)
