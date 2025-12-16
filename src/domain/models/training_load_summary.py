@@ -11,9 +11,8 @@ class TrainingLoadSummary(BaseModel):
     calculated_at: datetime
 
     # Distance metrics (km)
-    last_7_days_km: float = Field(..., ge=0)
-    last_28_days_km: float = Field(..., ge=0)
-    baseline_weekly_km: float = Field(..., ge=0)
+    acute_load_km: float = Field(..., ge=0)
+    chronic_load_km: float = Field(..., ge=0)
 
     # Key ratios
     acwr: float = Field(..., ge=0, description="Acute:Chronic Workload Ratio")

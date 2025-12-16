@@ -45,8 +45,8 @@ def get_open_meteo_api_client() -> BaseAPIClient:
 @lru_cache()
 def get_strava_client() -> StravaAPIClient:
     """Dependency that provides a singleton StravaAPIClient instance."""
-    api_client = get_strava_api_client()
-    return StravaAPIClient(api_client)
+    base_api_client = get_strava_api_client()
+    return StravaAPIClient(base_api_client)
 
 
 @lru_cache()
