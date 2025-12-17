@@ -7,7 +7,7 @@ __all__ = [
     "DataProvider",
 ]
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from src.domain.models import (
@@ -23,6 +23,8 @@ from src.services.sleep_and_recovery import ManualSleepService
 from src.services.strava import ActivityType, StravaAPIClient
 from src.services.training_load import TrainingLoadService
 from src.services.weather import OpenMeteoWeatherAPIClient
+
+AFTER_TIMESTAMP = int((datetime.now(timezone.utc) - timedelta(days=28)).timestamp())  # 28 days ago
 
 
 class DataProvider:
@@ -68,33 +70,32 @@ class DataProvider:
         acwr_response = self.training_load_service.calculate_acute_chronic_ratio()
         load_ratio_response = self.training_load_service.calculate_training_load_ratio()
 
-        activities = self.strava_client.get_activities(ActivityType.RECENT_RUNS, limit=30).activities
+        activities = self.strava_client.get_activities(ActivityType.RECENT_RUNS, after=AFTER_TIMESTAMP).activities
 
         days_since_last_run = 0
         consecutive_days = 0
         if activities:
-            last_run_date = activities[0].start_date_local
+            last_run_date = activities[-1].start_date_local
             days_since_last_run = (datetime.now(timezone.utc) - last_run_date).days
 
             consecutive_days = self._calculate_consecutive_days(activities)
 
         return TrainingLoadSummary(
             calculated_at=datetime.now(timezone.utc),
-            last_7_days_km=acwr_response.acute_load_km,
-            last_28_days_km=acwr_response.chronic_load_km * 4,
-            baseline_weekly_km=load_ratio_response.baseline_weekly_km,
+            acute_load_km=acwr_response.acute_load_km,
+            chronic_load_km=acwr_response.chronic_load_km,
             acwr=acwr_response.acwr or 0.0,
             load_ratio=load_ratio_response.load_ratio or 0.0,
             days_since_last_run=days_since_last_run,
             consecutive_training_days=consecutive_days,
         )
 
-    def get_recent_run_trends(self, limit: int = 10) -> RecentRunTrends:
+    def get_recent_run_trends(self) -> RecentRunTrends:
         """Fetch recent runs and transform to domain model."""
-        activities_response = self.strava_client.get_activities(ActivityType.RECENT_RUNS, limit=30)
+        activities_response = self.strava_client.get_activities(ActivityType.RECENT_RUNS, after=AFTER_TIMESTAMP)
 
         recent_runs = []
-        for activity in activities_response.activities[:limit]:
+        for activity in activities_response.activities:
             recent_runs.append(
                 SingleRun(
                     id=activity.id,
@@ -111,20 +112,20 @@ class DataProvider:
 
         now = datetime.now(timezone.utc)
         runs_7_days = sum(1 for run in recent_runs if (now - run.date).days <= 7)
-        runs_30_days = len(recent_runs)
+        runs_28_days = len(recent_runs)
 
         distance_7_days = sum(run.distance_km for run in recent_runs if (now - run.date).days <= 7)
-        distance_30_days = sum(run.distance_km for run in recent_runs)
+        distance_28_days = sum(run.distance_km for run in recent_runs)
 
-        days_since_last = (now - recent_runs[0].date).days if recent_runs else None
+        days_since_last = (now - recent_runs[-1].date).days if recent_runs else None
 
         return RecentRunTrends(
             calculated_at=now,
             recent_runs=recent_runs,
             runs_last_7_days=runs_7_days,
-            runs_last_30_days=runs_30_days,
+            runs_last_30_days=runs_28_days,
             total_distance_last_7_days_km=distance_7_days,
-            total_distance_last_30_days_km=distance_30_days,
+            total_distance_last_30_days_km=distance_28_days,
             days_since_last_run=days_since_last,
         )
 

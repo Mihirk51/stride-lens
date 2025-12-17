@@ -3,9 +3,9 @@ __all__ = [
     "ActivityType",
 ]
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from src.core import constants
 from src.core.clients.base_api_client import BaseAPIClient
@@ -15,13 +15,16 @@ from src.interfaces.strava import StravaService
 from src.schemas.strava_activity_schema import StravaActivity, StravaServiceResponse
 from src.services.strava.utils import refresh_strava_token
 
+AFTER_TIMESTAMP = int((datetime.now(timezone.utc) - timedelta(days=30)).timestamp())  # 28 days ago
+
 log = logger
+EpochTimestamp = int
 
 
 class Constants(constants.Constants):
     STRAVA_ATHLETE_ENDPOINT = "/athlete"
     STRAVA_ACTIVITIES_ENDPOINT = "/athlete/activities"
-    STRAVA_ACTIVITY_LIMIT = 20
+    STRAVA_ACTIVITY_LIMIT = 100
 
 
 class ActivityType(str, Enum):
@@ -51,19 +54,38 @@ class StravaAPIClient(StravaService):
         response = self.api_client.get(url, headers=self._headers())
         return response.get_json()
 
-    def _get_recent_activities(self, limit: int = Constants.STRAVA_ACTIVITY_LIMIT) -> list[dict]:
+    def _get_recent_activities(
+        self,
+        limit: int = Constants.STRAVA_ACTIVITY_LIMIT,
+        before: Optional[EpochTimestamp] = None,
+        after: Optional[EpochTimestamp] = None,
+    ) -> list[dict]:
         url = Constants.STRAVA_ACTIVITIES_ENDPOINT
-        params = {"per_page": limit, "page": 1}
+        params = {
+            "per_page": limit,
+            "page": 1,
+            "before": before,
+            "after": after,
+        }
         response = self.api_client.get(url, headers=self._headers(), params=params)
         activities = response.get_json()
         return activities
 
-    def _get_recent_runs(self, limit: int = Constants.STRAVA_ACTIVITY_LIMIT) -> list[dict]:
-        activities = self._get_recent_activities(limit=limit)
+    def _get_recent_runs(
+        self,
+        limit: int = Constants.STRAVA_ACTIVITY_LIMIT,
+        before: Optional[EpochTimestamp] = None,
+        after: Optional[EpochTimestamp] = None,
+    ) -> list[dict]:
+        activities = self._get_recent_activities(limit=limit, before=before, after=after)
         return [a for a in activities if a["type"] == "Run"]
 
     def _get_data_by_type(
-        self, activity_type: ActivityType, limit: int = None
+        self,
+        activity_type: ActivityType,
+        limit: int = None,
+        before: Optional[EpochTimestamp] = None,
+        after: Optional[EpochTimestamp] = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Get different types of Strava data with proper retry logic.
@@ -79,9 +101,11 @@ class StravaAPIClient(StravaService):
             APIException: If all retry attempts fail
         """
         method_mapping = {
-            ActivityType.RECENT_RUNS: lambda: self._get_recent_runs(limit or Constants.STRAVA_ACTIVITY_LIMIT),
+            ActivityType.RECENT_RUNS: lambda: self._get_recent_runs(
+                limit or Constants.STRAVA_ACTIVITY_LIMIT, before, after
+            ),
             ActivityType.RECENT_ACTIVITIES: lambda: self._get_recent_activities(
-                limit or Constants.STRAVA_ACTIVITY_LIMIT
+                limit or Constants.STRAVA_ACTIVITY_LIMIT, before, after
             ),
             ActivityType.ATHLETE_PROFILE: lambda: self._get_athlete_profile(),
         }
@@ -173,7 +197,13 @@ class StravaAPIClient(StravaService):
         return converted
 
     @ensure_token
-    def get_activities(self, activity_type: ActivityType, limit: int = None) -> StravaServiceResponse:
+    def get_activities(
+        self,
+        activity_type: ActivityType,
+        limit: int = None,
+        before: Optional[EpochTimestamp] = None,
+        after: Optional[EpochTimestamp] = None,
+    ) -> StravaServiceResponse:
         """
         Get activities as parsed Pydantic models.
 
@@ -185,7 +215,7 @@ class StravaAPIClient(StravaService):
         if activity_type == ActivityType.ATHLETE_PROFILE:
             return StravaServiceResponse(activities=[], athlete_profile=athlete_profile)
 
-        raw_data = self._get_data_by_type(activity_type, limit)
+        raw_data = self._get_data_by_type(activity_type, limit, before, after)
 
         if not isinstance(raw_data, list):
             raise ValueError(f"Expected list for {activity_type}, got {type(raw_data)}")
@@ -213,8 +243,7 @@ class StravaAPIClient(StravaService):
 def main():
     api_client = BaseAPIClient(base_url=Constants.STRAVA_API_BASE_URL)
     strava_api_client = StravaAPIClient(api_client)
-    runs_models = strava_api_client.get_activities(ActivityType.RECENT_RUNS, limit=5)
-
+    runs_models = strava_api_client.get_activities(ActivityType.RECENT_RUNS, after=AFTER_TIMESTAMP).activities
     for run in runs_models:
         print(run.model_dump_json(indent=2))
 

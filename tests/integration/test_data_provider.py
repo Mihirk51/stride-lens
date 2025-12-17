@@ -28,6 +28,7 @@ def test_weather_conditions():
         print(f"✓ Temperature: {weather.temperature_c}°C")
         print(f"✓ Humidity: {weather.humidity_percent}%")
         print(f"✓ Wind Speed: {weather.wind_speed_mph} mph")
+        print(f"✓ Wind Gusts: {weather.wind_gusts_mph} mph")
         print(f"✓ Precipitation: {weather.precipitation_mm} mm")
         print(f"✓ Is Day: {weather.is_day}")
         print(f"✓ Timezone: {weather.timezone}")
@@ -49,13 +50,12 @@ def test_training_load_summary():
 
         load = provider.get_training_load_summary()
         print(f"✓ Calculated At: {load.calculated_at}")
-        print(f"✓ Last 7 Days: {load.last_7_days_km} km")
-        print(f"✓ Last 28 Days: {load.last_28_days_km} km")
-        print(f"✓ Baseline Weekly: {load.baseline_weekly_km} km")
+        print(f"✓ Acute Load (7 days): {load.acute_load_km} km")
+        print(f"✓ Chronic Load (28 days): {load.chronic_load_km} km")
         print(f"✓ ACWR: {load.acwr:.2f}")
         print(f"✓ Load Ratio: {load.load_ratio:.2f}")
         print(f"✓ Days Since Last Run: {load.days_since_last_run}")
-        print(f"✓ Consecutive Days: {load.consecutive_training_days}")
+        print(f"✓ Consecutive Training Days: {load.consecutive_training_days}")
 
     except Exception as e:
         print(f"✗ Failed: {e}")
@@ -72,16 +72,22 @@ def test_recent_run_trends():
             lat_lon_service=get_lat_lon_service(),
         )
 
-        trends = provider.get_recent_run_trends(limit=5)
+        trends = provider.get_recent_run_trends()
         print(f"✓ Calculated At: {trends.calculated_at}")
         print(f"✓ Runs Last 7 Days: {trends.runs_last_7_days}")
-        print(f"✓ Runs Last 30 Days: {trends.runs_last_30_days}")
+        print(f"✓ Runs Last 28 Days: {trends.runs_last_30_days}")
         print(f"✓ Distance Last 7 Days: {trends.total_distance_last_7_days_km:.2f} km")
-        print(f"✓ Distance Last 30 Days: {trends.total_distance_last_30_days_km:.2f} km")
+        print(f"✓ Distance Last 28 Days: {trends.total_distance_last_30_days_km:.2f} km")
         print(f"✓ Days Since Last Run: {trends.days_since_last_run}")
-        print("\n  Recent Runs (showing first 3):")
-        for run in trends.recent_runs[:3]:
-            print(f"  - {run.name}: {run.distance_km:.2f}km at {run.avg_pace_min_per_km:.2f} min/km")
+
+        if trends.recent_runs:
+            print(f"\n  Recent Runs (showing first {min(3, len(trends.recent_runs))}):")
+            for run in trends.recent_runs[:3]:
+                pace_str = f"{run.avg_pace_min_per_km:.2f} min/km" if run.avg_pace_min_per_km else "N/A"
+                hr_str = f"HR: {run.avg_heartrate}" if run.avg_heartrate else "No HR"
+                print(f"  - {run.name}: {run.distance_km:.2f}km, {run.moving_time_minutes}min, {pace_str}, {hr_str}")
+        else:
+            print("  No recent runs found")
 
     except Exception as e:
         print(f"✗ Failed: {e}")
