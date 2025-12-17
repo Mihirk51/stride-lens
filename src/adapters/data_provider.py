@@ -24,7 +24,7 @@ from src.services.strava import ActivityType, StravaAPIClient
 from src.services.training_load import TrainingLoadService
 from src.services.weather import OpenMeteoWeatherAPIClient
 
-AFTER_TIMESTAMP = int((datetime.now(timezone.utc) - timedelta(days=30)).timestamp())  # 28 days ago
+AFTER_TIMESTAMP = int((datetime.now(timezone.utc) - timedelta(days=28)).timestamp())  # 28 days ago
 
 
 class DataProvider:

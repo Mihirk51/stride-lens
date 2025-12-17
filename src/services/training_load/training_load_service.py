@@ -30,6 +30,13 @@ class TrainingLoadService(ITrainingLoadService):
         self.strava_client = strava_client
         self.activities: list[StravaActivity] = list()
 
+    def _load_activities(self, lookback_days: int = 28) -> None:
+        """Fetch activities explicitly before calculations."""
+        after_timestamp = int((datetime.now(timezone.utc) - timedelta(days=lookback_days)).timestamp())
+        self.activities = self.strava_client.get_activities(ActivityType.RECENT_RUNS, after=after_timestamp).activities
+
+        return self.activities
+
     def get_baseline_weekly_mileage(self, weeks: int) -> float:
         """
         Calculate average weekly mileage over the past N weeks.
@@ -40,9 +47,8 @@ class TrainingLoadService(ITrainingLoadService):
         Returns:
             Average weekly mileage in kilometers
         """
-        self.activities = self.strava_client.get_activities(
-            ActivityType.RECENT_RUNS, limit=Constants.TRAINING_LOAD_ACTIVITIES_LIMIT
-        ).activities
+        if not self.activities:
+            self._load_activities(lookback_days=weeks * 7)
 
         if not self.activities:
             return 0.0
@@ -69,14 +75,7 @@ class TrainingLoadService(ITrainingLoadService):
 
     def calculate_7_days_load(self) -> float:
         """Calculate mileage for the past 7 days (rolling window)."""
-        activities = (
-            self.strava_client.get_activities(
-                ActivityType.RECENT_RUNS,
-                limit=20,
-            ).activities
-            if not self.activities
-            else self.activities
-        )
+        activities = self._load_activities() if not self.activities else self.activities
         seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
 
         recent_activities = [activity for activity in activities if activity.start_date_local >= seven_days_ago]
@@ -172,3 +171,4 @@ if __name__ == "__main__":
     strava_client = StravaAPIClient(api_client)
     training_load_service = TrainingLoadService(strava_client=strava_client)
     acute_chronic_ratio = training_load_service.calculate_acute_chronic_ratio()
+    training_load_ratio = training_load_service.calculate_training_load_ratio()
