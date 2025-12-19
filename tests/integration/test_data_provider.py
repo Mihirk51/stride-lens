@@ -4,7 +4,7 @@ Run this to verify all adapter methods work in production-like conditions.
 """
 
 from src.adapters.data_provider import DataProvider
-from src.api.dependencies import (
+from src.core.dependencies import (
     get_lat_lon_service,
     get_strava_client,
     get_training_load_service,

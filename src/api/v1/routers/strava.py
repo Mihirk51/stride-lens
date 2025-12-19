@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from src.api.dependencies import get_strava_client
 from src.api.v1.schemas.strava_respose_schemas import StravaActivityResponse
+from src.core.dependencies import get_strava_client
 from src.services.strava.strava_api_client import ActivityType, StravaAPIClient
 
 router = APIRouter(tags=["strava_activities"])

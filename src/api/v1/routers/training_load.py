@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 
-from src.api.dependencies import get_training_load_service
 from src.api.v1.schemas.training_load_response_schema import ACWRAPIResponse, TrainingLoadAPIResponse
+from src.core.dependencies import get_training_load_service
 from src.services.training_load.training_load_service import TrainingLoadService
 
 router = APIRouter(tags=["training_load"])
