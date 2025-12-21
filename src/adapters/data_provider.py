@@ -10,6 +10,7 @@ __all__ = [
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+from src.core import constants
 from src.domain.models import (
     RecentRunTrends,
     SingleRun,
@@ -24,7 +25,13 @@ from src.services.strava import ActivityType, StravaAPIClient
 from src.services.training_load import TrainingLoadService
 from src.services.weather import OpenMeteoWeatherAPIClient
 
-AFTER_TIMESTAMP = int((datetime.now(timezone.utc) - timedelta(days=28)).timestamp())  # 28 days ago
+
+class Constants(constants.Constants):
+    LOAD_RATIO_BASELINE_WEEKS = 8
+    AFTER_TIMESTAMP_DAYS = 28
+
+
+AFTER_TIMESTAMP = int((datetime.now(timezone.utc) - timedelta(days=Constants.AFTER_TIMESTAMP_DAYS)).timestamp())
 
 
 class DataProvider:
@@ -68,7 +75,9 @@ class DataProvider:
     def get_training_load_summary(self) -> TrainingLoadSummary:
         """Fetch training load data and transform to domain model."""
         acwr_response = self.training_load_service.calculate_acute_chronic_ratio()
-        load_ratio_response = self.training_load_service.calculate_training_load_ratio()
+        load_ratio_response = self.training_load_service.calculate_training_load_ratio(
+            weeks_baseline=Constants.LOAD_RATIO_BASELINE_WEEKS
+        )
 
         activities = self.strava_client.get_activities(ActivityType.RECENT_RUNS, after=AFTER_TIMESTAMP).activities
 

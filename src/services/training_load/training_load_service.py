@@ -21,7 +21,6 @@ log = logger
 
 
 class Constants(constants.Constants):
-    TRAINING_LOAD_ACTIVITIES_LIMIT = 100
     TRAINING_LOAD_DEFAULT_WEEKS = 4
 
 
@@ -47,8 +46,8 @@ class TrainingLoadService(ITrainingLoadService):
         Returns:
             Average weekly mileage in kilometers
         """
-        if not self.activities:
-            self._load_activities(lookback_days=weeks * 7)
+
+        self.activities = self._load_activities(lookback_days=weeks * 7)
 
         if not self.activities:
             return 0.0

@@ -24,7 +24,7 @@ EpochTimestamp = int
 class Constants(constants.Constants):
     STRAVA_ATHLETE_ENDPOINT = "/athlete"
     STRAVA_ACTIVITIES_ENDPOINT = "/athlete/activities"
-    STRAVA_ACTIVITY_LIMIT = 100
+    STRAVA_ACTIVITY_LIMIT = 200
 
 
 class ActivityType(str, Enum):
