@@ -138,18 +138,26 @@ class DataProvider:
             days_since_last_run=days_since_last,
         )
 
-    def get_sleep_readiness(self, sleep_score: Optional[float] = None) -> Optional[SleepReadiness]:
+    def get_sleep_readiness(self) -> SleepReadiness:
         """
         Get sleep readiness data if available.
         For now, returns manual input if provided, otherwise None.
         """
-        if sleep_score is None:
-            return None
+
+        manual_sleep = {
+            "awake_minutes": 30,
+            "rem_sleep_minutes": 53,
+            "core_sleep_minutes": 232,
+            "deep_sleep_minutes": 79,
+            "recovery_percent": 52,
+            "sleep_score_percent": 72,
+            "score": 61.21,
+        }  # add logic to fetch from service if available
 
         return SleepReadiness(
             date=datetime.now(timezone.utc),
-            score=sleep_score,
             data_source="manual",
+            **manual_sleep,
         )
 
     @staticmethod
