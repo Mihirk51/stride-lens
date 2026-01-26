@@ -181,17 +181,17 @@ class DataProvider:
         """
 
         manual_sleep = {
-            "awake_minutes": 30,
-            "rem_sleep_minutes": 53,
-            "core_sleep_minutes": 232,
-            "deep_sleep_minutes": 79,
-            "recovery_percent": 52,
-            "sleep_score_percent": 72,
-            "score": 61.21,
+            "time_awake_minutes": 6,
+            "rem_sleep_minutes": 106,
+            "core_sleep_minutes": 331,
+            "deep_sleep_minutes": 48,
+            "recovery_percent": 78,
+            "sleep_score_percent": 98,
         }  # add logic to fetch from service if available
 
         return SleepReadiness(
             date=datetime.now(timezone.utc),
+            score=98,  # Use sleep_score_percent as initial score
             data_source="manual",
             **manual_sleep,
         )

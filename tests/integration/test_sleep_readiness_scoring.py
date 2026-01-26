@@ -31,8 +31,8 @@ def test_sleep_readiness_component():
             print(f"✓ Deep Sleep: {sleep_data.deep_sleep_minutes} min")
         if sleep_data.rem_sleep_minutes:
             print(f"✓ REM Sleep: {sleep_data.rem_sleep_minutes} min")
-        if sleep_data.awake_minutes:
-            print(f"✓ Time Awake: {sleep_data.awake_minutes} min")
+        if sleep_data.time_awake_minutes:
+            print(f"✓ Time Awake: {sleep_data.time_awake_minutes} min")
 
         component = SleepReadinessComponent()
         result = component.calculate(sleep_data)

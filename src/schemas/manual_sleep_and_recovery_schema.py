@@ -70,16 +70,16 @@ class ManualSleepObjectiveInput(BaseModel):
 
 
 class ManualSleepServiceResponse(BaseModel):
-    """Response model for ManualSleepService.record_sleep method."""
+    """Response model for ManualSleepService.record_sleep method.
 
-    score: Optional[float] = Field(None, description="Calculated sleep score (0-100) or subjective rating")
+    Service layer returns raw metrics only. Scoring is handled by domain layer.
+    """
+
     method: Literal["subjective_rating", "manual_metrics", "invalid"] = Field(
-        ..., description="Method used for calculation"
+        ..., description="Method used to collect sleep data"
     )
+    details: Optional[Dict[str, Any]] = Field(None, description="Raw sleep metrics (all fields optional)")
     warning: Optional[str] = Field(None, description="Warning message about data quality or limitations")
-    details: Optional[Dict[str, Any]] = Field(
-        None, description="Additional sleep metrics details (only for objective data)"
-    )
 
     class Config:
         json_schema_extra = {

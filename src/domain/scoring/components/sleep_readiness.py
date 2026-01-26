@@ -13,10 +13,11 @@ class SleepReadinessScore(SleepReadiness):
 
 class SleepReadinessComponent:
     """
-    Scores sleep readiness.
+    Scores sleep readiness from raw sleep metrics.
 
     Philosophy:
-    - Uses pre-calculated sleep score from provider (Oura, Whoop, manual, etc.)
+    - Calculates score from available metrics (sleep stages, recovery, etc.)
+    - If sleep_score_percent is provided, uses it as base; otherwise calculates
     - Normalizes to 0-1 scale for consistency with other components
     - Provides interpretation and warnings based on score thresholds
 
@@ -32,26 +33,101 @@ class SleepReadinessComponent:
 
     def calculate(self, sleep_data: SleepReadiness) -> SleepReadinessScore:
         """
-        Calculate sleep readiness interpretation from pre-scored data.
+        Calculate sleep readiness score from raw metrics.
 
-        Note: Sleep score comes in 0-100 scale from data provider.
-        This component normalizes to 0-1 scale for consistency.
+        If sleep_score_percent is provided, uses it as base.
+        Otherwise, calculates from available metrics.
+        Returns 0-1 scale for consistency.
         """
         self.warnings = []
 
-        sleep_data.score = sleep_data.score / 100.0
+        calculated_score = self._calculate_sleep_score(sleep_data)
 
-        readiness_level, interpretation = self._interpret_score(sleep_data.score, sleep_data)
+        normalized_score = calculated_score / 100.0
+
+        readiness_level, interpretation = self._interpret_score(normalized_score, sleep_data)
 
         self._add_warnings(sleep_data)
         self._add_missing_data_warnings(sleep_data)
 
+        # Exclude 'score' from model_dump to avoid duplicate argument
+        sleep_dict = sleep_data.model_dump(exclude={"score"})
+
         return SleepReadinessScore(
-            **sleep_data.model_dump(),
+            **sleep_dict,
+            score=normalized_score,
             readiness_level=readiness_level,
             interpretation=interpretation,
             warnings=self.warnings.copy(),
         )
+
+    def _calculate_sleep_score(self, sleep_data: SleepReadiness) -> float:
+        """
+        Calculate sleep score from available metrics (0-100 scale).
+
+        Uses weighted average of all available metrics.
+        Matches original BaseSleepService scoring logic.
+        """
+        weights = {
+            "sleep_score_percent": 0.5,
+            "recovery_percent": 0.3,
+            "deep_sleep_minutes": 0.2,
+            "rem_sleep_minutes": 0.15,
+            "core_sleep_minutes": 0.05,
+            "time_awake_minutes": -0.2,
+            "time_in_bed_minutes": 0.05,
+        }
+
+        total_weight = 0
+        weighted_sum = 0
+
+        for field, weight in weights.items():
+            value = getattr(sleep_data, field, None)
+            if value is not None:
+                normalized = self._normalize_metric(field, value)
+                weighted_sum += normalized * abs(weight)
+                total_weight += abs(weight)
+
+        # Return weighted average or default to 50
+        return round(weighted_sum / total_weight, 2) if total_weight > 0 else 50.0
+
+    @staticmethod
+    def _normalize_metric(field: str, value: float) -> float:
+        """
+        Normalize sleep metrics to 0-100 scale.
+
+        Research-backed thresholds:
+        - Deep sleep: 60-120min optimal for athletes
+        - REM sleep: 90-120min optimal
+        - Core sleep: 180-270min optimal
+        - Time in bed: 420-480min optimal
+        - Time awake: <30min good, >60min poor
+        """
+        if field == "deep_sleep_minutes":
+            # Optimal: 60-120min, normalize to 100 at 120min
+            return min(value / 120 * 100, 100)
+
+        elif field == "rem_sleep_minutes":
+            # Optimal: 90-120min, normalize to 100 at 120min
+            return min(value / 120 * 100, 100)
+
+        elif field == "core_sleep_minutes":
+            # Optimal: 180-270min, normalize to 100 at 270min
+            return min(value / 270 * 100, 100)
+
+        elif field == "time_in_bed_minutes":
+            # Optimal: 420-480min (7-8hrs), normalize to 100 at 480min
+            return min(value / 480 * 100, 100)
+
+        elif field == "time_awake_minutes":
+            # Penalty for wake time: >60min = 0 points, 0min = 100 points
+            return max(100 - (value / 60 * 100), 0)
+
+        elif field == "recovery_percent":
+            # Already 0-100 scale
+            return value
+
+        return float(value)
 
     def _interpret_score(self, score: float, sleep_data: SleepReadiness) -> tuple[str, str]:
         """Provide human-readable interpretation of sleep score (0-1 scale)."""
@@ -80,7 +156,7 @@ class SleepReadinessComponent:
         if sleep_data.rem_sleep_minutes and sleep_data.rem_sleep_minutes < 60:
             self.warnings.append("Low REM sleep - cognitive function and coordination may be affected")
 
-        if sleep_data.awake_minutes and sleep_data.awake_minutes > 60:
+        if sleep_data.time_awake_minutes and sleep_data.time_awake_minutes > 60:
             self.warnings.append("High wake time - sleep quality disrupted")
 
         if sleep_data.total_sleep_minutes:
@@ -105,7 +181,7 @@ class SleepReadinessComponent:
         if sleep_data.rem_sleep_minutes is None:
             missing_fields.append("REM sleep data")
 
-        if sleep_data.awake_minutes is None:
+        if sleep_data.time_awake_minutes is None:
             missing_fields.append("wake time data")
 
         if missing_fields:
