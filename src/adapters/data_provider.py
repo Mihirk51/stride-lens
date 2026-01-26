@@ -37,22 +37,58 @@ AFTER_TIMESTAMP = int((datetime.now(timezone.utc) - timedelta(days=Constants.AFT
 class DataProvider:
     """
     Adapter that fetches data from services and transforms into domain models.
-    This is the bridge between the service layer and domain scoring logic.
+    Uses lazy initialization - services are only fetched when needed.
     """
 
     def __init__(
         self,
-        strava_client: StravaAPIClient,
-        weather_client: OpenMeteoWeatherAPIClient,
-        training_load_service: TrainingLoadService,
-        lat_lon_service: LatLonService,
+        strava_client: Optional[StravaAPIClient] = None,
+        weather_client: Optional[OpenMeteoWeatherAPIClient] = None,
+        training_load_service: Optional[TrainingLoadService] = None,
+        lat_lon_service: Optional[LatLonService] = None,
         sleep_service: Optional[ManualSleepService] = None,
     ):
-        self.strava_client = strava_client
-        self.weather_client = weather_client
-        self.training_load_service = training_load_service
-        self.lat_lon_service = lat_lon_service
-        self.sleep_service = sleep_service
+        self._strava_client = strava_client
+        self._weather_client = weather_client
+        self._training_load_service = training_load_service
+        self._lat_lon_service = lat_lon_service
+        self._sleep_service = sleep_service
+
+    @property
+    def strava_client(self) -> StravaAPIClient:
+        if self._strava_client is None:
+            from src.core.dependencies import get_strava_client
+
+            self._strava_client = get_strava_client()
+        return self._strava_client
+
+    @property
+    def weather_client(self) -> OpenMeteoWeatherAPIClient:
+        if self._weather_client is None:
+            from src.core.dependencies import get_weather_client
+
+            self._weather_client = get_weather_client()
+        return self._weather_client
+
+    @property
+    def training_load_service(self) -> TrainingLoadService:
+        if self._training_load_service is None:
+            from src.core.dependencies import get_training_load_service
+
+            self._training_load_service = get_training_load_service()
+        return self._training_load_service
+
+    @property
+    def lat_lon_service(self) -> LatLonService:
+        if self._lat_lon_service is None:
+            from src.core.dependencies import get_lat_lon_service
+
+            self._lat_lon_service = get_lat_lon_service()
+        return self._lat_lon_service
+
+    @property
+    def sleep_service(self) -> Optional[ManualSleepService]:
+        return self._sleep_service
 
     def get_weather_conditions(self) -> WeatherConditions:
         """Fetch current weather and transform to domain model."""

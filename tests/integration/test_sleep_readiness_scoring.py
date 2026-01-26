@@ -5,12 +5,6 @@ Integration test for SleepReadinessComponent using real data from DataProvider.
 from datetime import datetime, timezone
 
 from src.adapters.data_provider import DataProvider
-from src.core.dependencies import (
-    get_lat_lon_service,
-    get_strava_client,
-    get_training_load_service,
-    get_weather_client,
-)
 from src.domain.models.sleep_readiness import SleepReadiness
 from src.domain.scoring.components.sleep_readiness import SleepReadinessComponent
 
@@ -20,12 +14,7 @@ def test_sleep_readiness_component():
     print("\n=== Testing Sleep Readiness Component ===")
 
     try:
-        provider = DataProvider(
-            strava_client=get_strava_client(),
-            weather_client=get_weather_client(),
-            training_load_service=get_training_load_service(),
-            lat_lon_service=get_lat_lon_service(),
-        )
+        provider = DataProvider()
 
         sleep_data = provider.get_sleep_readiness()
 

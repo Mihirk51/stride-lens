@@ -4,24 +4,13 @@ Run this to verify all adapter methods work in production-like conditions.
 """
 
 from src.adapters.data_provider import DataProvider
-from src.core.dependencies import (
-    get_lat_lon_service,
-    get_strava_client,
-    get_training_load_service,
-    get_weather_client,
-)
 
 
 def test_weather_conditions():
     """Test fetching and transforming weather data."""
     print("\n=== Testing Weather Conditions ===")
     try:
-        provider = DataProvider(
-            strava_client=get_strava_client(),
-            weather_client=get_weather_client(),
-            training_load_service=get_training_load_service(),
-            lat_lon_service=get_lat_lon_service(),
-        )
+        provider = DataProvider()
 
         weather = provider.get_weather_conditions()
         print(f"✓ Timestamp: {weather.timestamp}")
@@ -41,12 +30,7 @@ def test_training_load_summary():
     """Test fetching and transforming training load data."""
     print("\n=== Testing Training Load Summary ===")
     try:
-        provider = DataProvider(
-            strava_client=get_strava_client(),
-            weather_client=get_weather_client(),
-            training_load_service=get_training_load_service(),
-            lat_lon_service=get_lat_lon_service(),
-        )
+        provider = DataProvider()
 
         load = provider.get_training_load_summary()
         print(f"✓ Calculated At: {load.calculated_at}")
@@ -65,12 +49,7 @@ def test_recent_run_trends():
     """Test fetching and transforming recent run data."""
     print("\n=== Testing Recent Run Trends ===")
     try:
-        provider = DataProvider(
-            strava_client=get_strava_client(),
-            weather_client=get_weather_client(),
-            training_load_service=get_training_load_service(),
-            lat_lon_service=get_lat_lon_service(),
-        )
+        provider = DataProvider()
 
         trends = provider.get_recent_run_trends()
         print(f"✓ Calculated At: {trends.calculated_at}")
@@ -97,17 +76,12 @@ def test_sleep_readiness():
     """Test sleep readiness transformation."""
     print("\n=== Testing Sleep Readiness ===")
     try:
-        provider = DataProvider(
-            strava_client=get_strava_client(),
-            weather_client=get_weather_client(),
-            training_load_service=get_training_load_service(),
-            lat_lon_service=get_lat_lon_service(),
-        )
+        provider = DataProvider()
 
-        sleep_none = provider.get_sleep_readiness(sleep_score=None)
+        sleep_none = provider.get_sleep_readiness()
         print(f"✓ No score provided: {sleep_none}")
 
-        sleep_with_score = provider.get_sleep_readiness(sleep_score=75.0)
+        sleep_with_score = provider.get_sleep_readiness()
         print(f"✓ Score provided: {sleep_with_score.score}")
         print(f"✓ Data Source: {sleep_with_score.data_source}")
         print(f"✓ Date: {sleep_with_score.date}")
