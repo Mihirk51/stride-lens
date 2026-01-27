@@ -90,7 +90,7 @@ class DataProvider:
     def sleep_service(self) -> Optional[ManualSleepService]:
         return self._sleep_service
 
-    def get_weather_conditions(self) -> WeatherConditions:
+    def get_current_weather(self) -> WeatherConditions:
         """Fetch current weather and transform to domain model."""
         lat_lon = self.lat_lon_service.get_lat_lon()
         request_params = CurrentWeatherRequestParams(latitude=lat_lon.latitude, longitude=lat_lon.longitude)
@@ -107,6 +107,46 @@ class DataProvider:
             is_day=bool(weather_response.current.is_day),
             timezone=weather_response.timezone,
         )
+
+    def get_weather_forecast_24h(self) -> list[WeatherConditions]:
+        """
+        Fetch 24-hour weather forecast from current time.
+
+        Returns hourly forecasts for the next 24 hours starting from now.
+        """
+        from src.schemas.weather_api_schema import WeatherForecastRequestParams
+
+        lat_lon = self.lat_lon_service.get_lat_lon()
+        request_params = WeatherForecastRequestParams(
+            latitude=lat_lon.latitude, longitude=lat_lon.longitude, forecast_days=3
+        )
+
+        forecast_response = self.weather_client.get_weather_forecast(request_params)
+
+        now = datetime.now()
+        weather_forecasts = []
+
+        for time_key, hourly_data in forecast_response.hourly.items():
+            forecast_time = datetime.fromisoformat(time_key)
+
+            if forecast_time >= now:
+                weather_forecasts.append(
+                    WeatherConditions(
+                        timestamp=forecast_time,
+                        temperature_c=hourly_data.temperature_2m,
+                        humidity_percent=hourly_data.relative_humidity_2m,
+                        wind_speed_mph=hourly_data.wind_speed_10m,
+                        wind_gusts_mph=hourly_data.wind_gusts_10m,
+                        precipitation_mm=hourly_data.precipitation,
+                        is_day=bool(hourly_data.is_day),
+                        timezone=forecast_response.timezone,
+                    )
+                )
+
+                if len(weather_forecasts) == 24:
+                    break
+
+        return weather_forecasts
 
     def get_training_load_summary(self) -> TrainingLoadSummary:
         """Fetch training load data and transform to domain model."""

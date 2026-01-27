@@ -12,7 +12,7 @@ def test_weather_conditions():
     try:
         provider = DataProvider()
 
-        weather = provider.get_weather_conditions()
+        weather = provider.get_current_weather()
         print(f"✓ Timestamp: {weather.timestamp}")
         print(f"✓ Temperature: {weather.temperature_c}°C")
         print(f"✓ Humidity: {weather.humidity_percent}%")
@@ -21,6 +21,39 @@ def test_weather_conditions():
         print(f"✓ Precipitation: {weather.precipitation_mm} mm")
         print(f"✓ Is Day: {weather.is_day}")
         print(f"✓ Timezone: {weather.timezone}")
+
+    except Exception as e:
+        print(f"✗ Failed: {e}")
+
+
+def test_weather_forecast_24h():
+    """Test fetching and transforming 24h weather forecast."""
+    print("\n=== Testing Weather Forecast 24h ===")
+    try:
+        provider = DataProvider()
+
+        forecasts = provider.get_weather_forecast_24h()
+        print(f"✓ Total forecasts: {len(forecasts)}")
+        print("✓ Expected: 24 hourly forecasts")
+
+        if forecasts:
+            first = forecasts[0]
+            last = forecasts[-1]
+
+            print("\n  First forecast:")
+            print(f"  - Timestamp: {first.timestamp}")
+            print(f"  - Temperature: {first.temperature_c}°C")
+            print(f"  - Humidity: {first.humidity_percent}%")
+            print(f"  - Precipitation: {first.precipitation_mm}mm")
+
+            print("\n  Last forecast:")
+            print(f"  - Timestamp: {last.timestamp}")
+            print(f"  - Temperature: {last.temperature_c}°C")
+
+            hours_diff = (last.timestamp - first.timestamp).total_seconds() / 3600
+            print(f"\n  ✓ Time span: {hours_diff:.1f} hours")
+        else:
+            print("  ✗ No forecasts returned")
 
     except Exception as e:
         print(f"✗ Failed: {e}")
@@ -97,6 +130,7 @@ def test_all():
     print("=" * 60)
 
     test_weather_conditions()
+    test_weather_forecast_24h()
     test_training_load_summary()
     test_recent_run_trends()
     test_sleep_readiness()
