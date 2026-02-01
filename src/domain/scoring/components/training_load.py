@@ -1,6 +1,19 @@
 """Training load scoring component."""
 
-from src.domain.models.training_load_summary import TrainingLoadScore, TrainingLoadSummary
+from pydantic import BaseModel, Field
+
+from src.domain.models.training_load_summary import TrainingLoadSummary
+
+
+class TrainingLoadScore(BaseModel):
+    """Result of training load scoring."""
+
+    score: float = Field(..., ge=0, le=1, description="Training load score (0-1)")
+    fatigue_level: str = Field(..., description="Human-readable fatigue level")
+    interpretation: str = Field(..., description="Detailed interpretation of current state")
+    warnings: list[str] = Field(default_factory=list, description="Actionable warnings")
+
+    summary: TrainingLoadSummary = Field(..., description="Underlying training load data")
 
 
 class TrainingLoadComponent:
@@ -24,7 +37,9 @@ class TrainingLoadComponent:
         """Calculate training load readiness score from 0-1."""
         self.warnings = []
 
-        base_score = self._score_training_load(load_summary.acwr, load_summary.load_ratio)
+        base_score = self._score_training_load(
+            load_summary.acwr, load_summary.load_ratio, load_summary.days_since_last_run
+        )
 
         rest_penalty = self._calculate_rest_penalty(
             load_summary.days_since_last_run, load_summary.consecutive_training_days
@@ -42,14 +57,15 @@ class TrainingLoadComponent:
             summary=load_summary,
         )
 
-    def _score_training_load(self, acwr: float, load_ratio: float) -> float:
+    def _score_training_load(self, acwr: float, load_ratio: float, days_since_last_run: int) -> float:
         """
         Score training load using ACWR and load ratio together.
 
         Load ratio helps distinguish between:
         - Sharp spike (high ACWR, high load_ratio) = injury risk
         - Controlled progression (moderate ACWR, elevated load_ratio) = acceptable
-        - Detraining (low ACWR, low load_ratio) = needs attention
+        - Intentional deload (low ACWR, low load_ratio, recent activity) = recovery week, well-rested
+        - Unintentional detraining (low ACWR, low load_ratio, long gap) = needs attention
         """
         if acwr == 0:
             return 0.5
@@ -81,11 +97,29 @@ class TrainingLoadComponent:
             return 1.0 - (acwr - 1.0) / 0.3 * 0.15
 
         else:
+            # ACWR < 0.8 (below baseline)
+            # Use days_since_last_run to distinguish intentional recovery from detraining
+            if load_ratio < 0.7:
+                # Both metrics low - check recency of activity
+                if days_since_last_run <= 4:
+                    # Still actively training, just reduced volume = intentional recovery
+                    self.warnings.append("Recovery week detected - reduced training volume")
+                    return min(1.0, 0.92 + (0.7 - load_ratio) * 0.2)
+                else:
+                    # Long gap + low volume = detraining
+                    self.warnings.append(
+                        f"Very low training volume with {days_since_last_run} days since last run - detraining risk"
+                    )
+                    deficit = 0.8 - acwr
+                    penalty = min(deficit * 0.5, 0.35)
+                    return max(0.5, 0.85 - penalty)
+
+            # Moderate load_ratio with low ACWR = gradual decline or inconsistency
             deficit = 0.8 - acwr
             if load_ratio < 0.9:
                 self.warnings.append("Training volume below baseline - potential detraining")
-            penalty = min(deficit * 0.5, 0.35)
-            return max(0.5, 0.85 - penalty)
+            penalty = min(deficit * 0.4, 0.25)  # Reduced penalty
+            return max(0.65, 0.85 - penalty)
 
     def _calculate_rest_penalty(self, days_since_last_run: int, consecutive_days: int) -> float:
         """Calculate penalty for inadequate rest patterns (0-1 scale)."""
@@ -117,8 +151,10 @@ class TrainingLoadComponent:
     def _interpret_score(score: float, load_summary: TrainingLoadSummary) -> tuple[str, str]:
         """Provide human-readable interpretation of training load score."""
         if score >= 0.85:
+            if load_summary.acwr < 0.8 and load_summary.load_ratio < 0.7:
+                return "Fresh (Recovery Week)", "Deload week - well-rested and ready for hard training when you resume."
             if load_summary.acwr < 0.8:
-                return "Fresh (Underloaded)", "Well-rested but training volume below baseline. Good for hard workouts."
+                return "Fresh (Reduced Volume)", "Lower training volume. Well-rested for quality workouts."
             return "Fresh", "Optimal training load. Ready for quality sessions or long runs."
 
         elif score >= 0.7:
